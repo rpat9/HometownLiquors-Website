@@ -7,11 +7,13 @@ import Products from "./pages/Products";
 import ProductDetail from "./pages/ProductDetail";
 import Cart from "./pages/Cart";
 import Admin from "./pages/Admin";
+import Navbar from "./components/Navbar";
 
 function App() {
   return (
     <Router>
       <div className="min-h-screen">
+        <Navbar />
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
