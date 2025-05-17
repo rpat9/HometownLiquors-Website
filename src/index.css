@@ -1,1 +1,76 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
 @import "tailwindcss";
+
+:root {
+    --color-primary: #B22222; /* Store logo red */
+    --color-bg: #F6F6F6;
+    --color-text-primary: #333333;
+    --color-text-secondary: #FFFFFF;
+    --color-text-secondary-hover: #777777;
+    --color-border: #B0BEC5;
+    --btn-bg-color: #B22222;
+    --btn-hover-color: #b14545;
+    --btn-text-color: #FFFFFF;
+  }
+  
+  
+  body {
+    background-color: var(--color-bg);
+    font-family: 'Inter', sans-serif;
+    color: var(--text-color);
+  }
+
+  .dark body {
+    background-color: var(--color-bg);
+    --color-primary: #ee8181;
+    --color-bg: #1F2937;
+    --color-text-primary: #FFFFFF;
+    --color-text-primary-hover: #777777;
+    --color-border: #444444;
+    --btn-bg-color: #FF6347;
+    --btn-hover-color: #fd8773;
+    --btn-text-color: #121212;
+  }
+
+  .dark .btn-primary:hover {
+    --btn-hover-color: #fd8773;
+    background-color: var(--btn-hover-color);
+  }
+  
+  @layer components{
+    .btn-primary {
+        @apply px-4 py-2 rounded-lg bg-[var(--btn-bg-color)] text-[var(--btn-text-color)] hover:bg-[var(--btn-hover-color)]
+    }
+  }
+
+  @layer utilities {
+    .fade-in {
+      animation: fade-in 0.6s ease-out both;
+    }
+  
+    .float {
+      animation: float 3s ease-in-out infinite;
+    }
+  
+    .fade-in-on-scroll {
+      opacity: 0;
+      transform: translateY(20px);
+      transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+    }
+  
+    .fade-in-on-scroll.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  @keyframes fade-in {
+    0% {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    100% {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
