@@ -86,7 +86,7 @@ export default function Navbar() {
 
             
             {isMenuOpen && (
-            <div className="absolute top-full left-0 right-0 bg-[var(--color-bg)]  shadow-lg py-4 px-6 md:hidden opacity-80">
+            <div className="absolute top-full left-0 right-0 bg-[var(--color-bg)] shadow-lg py-4 px-6 md:hidden opacity-80">
                 <div className="flex flex-col space-y-4">
 
                     <Link to="/" className="text-[var(--color-text-primary)] hover:text-[var(--color-primary)]">
