@@ -11,6 +11,7 @@
     --btn-bg-color: #B22222;
     --btn-hover-color: #b14545;
     --btn-text-color: #FFFFFF;
+    --card-bg: rgb(255, 255, 255);
   }
   
   
@@ -30,6 +31,7 @@
     --btn-bg-color: #FF6347;
     --btn-hover-color: #fd8773;
     --btn-text-color: #121212;
+    --card-bg: #35404e;
   }
 
   .dark .btn-primary:hover {
@@ -39,7 +41,16 @@
   
   @layer components{
     .btn-primary {
-        @apply px-4 py-2 rounded-lg bg-[var(--btn-bg-color)] text-[var(--btn-text-color)] hover:bg-[var(--btn-hover-color)]
+        @apply px-4 py-2 rounded-lg cursor-pointer bg-[var(--btn-bg-color)] text-[var(--btn-text-color)] hover:bg-[var(--btn-hover-color)];
+    }
+
+    .btn-hover{
+      @apply cursor-pointer hover:scale-105 transition duration-300 ease-in-out;
+    }
+
+    .card {
+      @apply bg-[var(--card-bg)] rounded-2xl shadow-md p-6 max-w-md space-y-4;
+      border: 1px solid rgba(var(--color-primary), 0.1);
     }
   }
 
