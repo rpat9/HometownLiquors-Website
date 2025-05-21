@@ -10,17 +10,20 @@ export function useFirestore() {
 
 export function FirestoreProvider({ children }) {
 
-    async function createUserProfile(userId, userData){
+    async function createUserProfile(userId, userData) {
+        if (!userData || typeof userData !== 'object') {
+            throw new Error("User data must be a valid object.");
+        }
         const userRef = doc(db, "users", userId);
         await setDoc(userRef, userData);
     }
 
-    async function updateUserProfile(userId, userData){
+    async function updateUserProfile(userId, userData) {
         const userRef = doc(db, "users", userId);
         await updateDoc(userRef, userData);
     }
 
-    async function getUserProfile(userId){
+    async function getUserProfile(userId) {
         const userRef = doc(db, "users", userId);
         const docSnap = await getDoc(userRef);
         return docSnap.exists() ? docSnap.data() : null;
@@ -31,7 +34,7 @@ export function FirestoreProvider({ children }) {
         updateUserProfile,
         getUserProfile
     };
-    
+
     return (
         <FirestoreContext.Provider value={value}>
             {children}
