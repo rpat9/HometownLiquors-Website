@@ -1,6 +1,6 @@
 import { createContext, useContext } from "react";
 import { db } from "../services/firebase";
-import { doc, setDoc, getDoc, updateDoc } from "firebase/firestore";
+import { collection, doc, setDoc, getDoc, updateDoc, addDoc } from "firebase/firestore";
 
 const FirestoreContext = createContext();
 
@@ -29,10 +29,28 @@ export function FirestoreProvider({ children }) {
         return docSnap.exists() ? docSnap.data() : null;
     }
 
+    async function createOrder(orderData) {
+        const docRef = await addDoc(collection(db, "orders"), orderData);
+        return docRef.id;
+      }
+      
+      async function getOrdersByIds(orderIds) {
+        const orderDocs = await Promise.all(
+          orderIds.map(async (orderId) => {
+            const orderRef = doc(db, "orders", orderId);
+            const orderSnap = await getDoc(orderRef);
+            return orderSnap.exists() ? { id: orderId, ...orderSnap.data() } : null;
+          })
+        );
+        return orderDocs.filter(Boolean);
+      }
+
     const value = {
         createUserProfile,
         updateUserProfile,
-        getUserProfile
+        getUserProfile,
+        createOrder,
+        getOrdersByIds
     };
 
     return (
