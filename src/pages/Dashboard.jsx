@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { useFirestore } from "../contexts/FirestoreContext";
+import { toast } from "react-hot-toast";
 
 export default function Dashboard() {
     const { currentUser, userData, setUserData } = useAuth();
@@ -48,7 +49,7 @@ export default function Dashboard() {
             const updatedData = await getUserProfile(currentUser.uid);
             setUserData(updatedData);
 
-            alert("Preferences updated!");
+            toast.success("Preferences updated!");
         }
     };
 

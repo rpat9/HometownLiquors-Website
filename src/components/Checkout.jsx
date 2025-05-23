@@ -3,6 +3,7 @@ import { useCart } from "../contexts/CartContext";
 import { useFirestore } from "../contexts/FirestoreContext";
 import { useAuth } from "../contexts/AuthContext";
 import { Timestamp } from "firebase/firestore";
+import { toast } from "react-hot-toast";
 
 
 export default function Checkout() {
@@ -53,12 +54,13 @@ export default function Checkout() {
         setUserData(updated);
 
         clearCart();
-        alert("Order placed! We'll see you at pickup.");
+
+        toast.success("Order placed! We'll see you at pickup.");
 
         } catch (err) {
 
             console.error("Order error:", err);
-            alert("Something went wrong while placing your order.");
+            toast.error("Something went wrong while placing your order.");
 
         }
     };

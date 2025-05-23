@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { useCart } from "../contexts/CartContext";
 
 export default function Cart() {
@@ -39,7 +38,7 @@ export default function Cart() {
                             <div className="flex items-center space-x-3">
 
                                 <button
-                                    onClick={() => updateQuantity(item.id, -1)}
+                                    onClick={() => updateQuantity(item.id, item.quantity - 1)}
                                     className="btn-primary btn-hover px-2"
                                 >
                                     -
@@ -48,7 +47,7 @@ export default function Cart() {
                                 <span>{item.quantity}</span>
 
                                 <button
-                                    onClick={() => updateQuantity(item.id, 1)}
+                                    onClick={() => updateQuantity(item.id, item.quantity + 1)}
                                     className="btn-primary btn-hover px-2"
                                 >
                                     +
