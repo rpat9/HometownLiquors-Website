@@ -1,26 +1,9 @@
 import { useState } from "react";
+import { useCart } from "../contexts/CartContext";
 
 export default function Cart() {
 
-    // Dummy product data (replace with Firestore later)
-    const [cartItems, setCartItems] = useState([
-        { id: "1", name: "Cabernet Sauvignon", price: 18.99, quantity: 1 },
-        { id: "2", name: "Craft IPA", price: 9.49, quantity: 2 },
-    ]);
-
-    const updateQuantity = (id, delta) => {
-        setCartItems((prev) =>
-            prev.map((item) =>
-                item.id === id
-                    ? { ...item, quantity: Math.max(1, item.quantity + delta) }
-                    : item
-            )
-        );
-    };
-
-    const removeItem = (id) => {
-        setCartItems((prev) => prev.filter((item) => item.id !== id));
-    };
+    const { cartItems, updateQuantity, removeFromCart } = useCart();
 
     const getSubtotal = () => {
         return cartItems.reduce((total, item) => total + item.price * item.quantity, 0).toFixed(2);
@@ -72,7 +55,7 @@ export default function Cart() {
                                 </button>
 
                                 <button
-                                    onClick={() => removeItem(item.id)}
+                                    onClick={() => removeFromCart(item.id)}
                                     className="ml-4 text-[var(--color-primary)] hover:underline hover:text-[var(--btn-hover-color)] cursor-pointer"
                                 >
                                     Remove

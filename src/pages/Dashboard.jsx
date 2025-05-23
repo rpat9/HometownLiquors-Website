@@ -1,12 +1,10 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { useFirestore } from "../contexts/FirestoreContext";
-import { useLocation } from "react-router-dom";
 
 export default function Dashboard() {
     const { currentUser, userData, setUserData } = useAuth();
-    const { updateUserProfile, getUserProfile } = useFirestore();
-    const location = useLocation();
+    const { updateUserProfile, getUserProfile, getOrdersByIds } = useFirestore();
 
     const [preferences, setPreferences] = useState({
         lowStock: false,
@@ -14,11 +12,25 @@ export default function Dashboard() {
         restockAlerts: false,
     });
 
+    const [orders, setOrders] = useState([]);
+
     useEffect(() => {
         if (userData?.notificationPreferences) {
             setPreferences(userData.notificationPreferences);
         }
-    }, [userData, location.pathname]);
+    }, [userData]);
+
+    useEffect(() => {
+
+        const fetchOrders = async () => {
+            if (userData?.orderHistory?.length) {
+                const orderDocs = await getOrdersByIds(userData.orderHistory);
+                setOrders(orderDocs);
+            }
+        };
+    
+        fetchOrders();
+    }, [userData]);
 
     const handleToggle = (field) => {
         setPreferences((prev) => ({
@@ -47,7 +59,6 @@ export default function Dashboard() {
                 Welcome, {userData?.name || "User"}!
             </h1>
 
-            
             <section className="space-y-4">
 
                 <h2 className="text-2xl font-semibold">Notification Preferences</h2>
@@ -55,7 +66,6 @@ export default function Dashboard() {
                 <div className="space-y-2">
 
                     {Object.entries(preferences).map(([key, value]) => (
-
                         <label key={key} className="flex items-center space-x-2">
                             <input
                                 type="checkbox"
@@ -75,7 +85,6 @@ export default function Dashboard() {
 
             </section>
 
-            
             <section>
 
                 <h2 className="text-2xl font-semibold mb-2">Your Favorites</h2>
@@ -86,14 +95,36 @@ export default function Dashboard() {
 
             </section>
 
-            
             <section>
 
-                <h2 className="text-2xl font-semibold mb-2">Order History</h2>
+                <h2 className="text-2xl font-semibold mb-2">Your Orders</h2>
 
-                <div className="border border-[var(--color-border)] p-6 rounded-xl bg-[var(--card-bg)]">
-                    Your past orders will appear here once available.
-                </div>
+                {orders.length === 0 ? (
+
+                    <div className="border border-[var(--color-border)] p-6 rounded-xl bg-[var(--card-bg)]">
+                        You haven't placed any orders yet.
+                    </div>
+
+                ) : (
+                    <div className="space-y-4">
+
+                        {orders.map((order) => (
+
+                            <div
+                                key={order.id}
+                                className="border border-[var(--color-border)] p-4 rounded-xl bg-[var(--card-bg)]"
+                            >
+                                <p className="font-semibold">Order ID: {order.id}</p>
+                                <p>Status: {order.orderStatus}</p>
+                                <p>Total: ${order.orderTotal.toFixed(2)}</p>
+                                <p>Pickup Time: {order.pickupInstructions}</p>
+                                <p className="text-sm text-gray-400">{new Date(order.createdAt?.seconds * 1000).toLocaleString()}</p>
+                            </div>
+
+                        ))}
+
+                    </div>
+                )}
 
             </section>
 
