@@ -3,6 +3,7 @@ import { collection, getDocs } from "firebase/firestore";
 import { db } from "../services/firebase";
 import { useCart } from "../contexts/CartContext";
 import { toast } from "react-hot-toast";
+import { Link } from "react-router-dom";
 
 
 export default function Products() {
@@ -64,7 +65,9 @@ export default function Products() {
                                 className="w-full h-48 object-fill rounded mb-4"
                             />
 
+                            <Link to={`/products/${product.id}`}>
                             <h2 className="text-xl font-semibold mb-1">{product.name}</h2>
+                            </Link>
 
                             <p className="text-[var(--color-primary)] font-bold mb-1">${product.price.toFixed(2)}</p>
 
