@@ -32,9 +32,9 @@ export function FirestoreProvider({ children }) {
     async function createOrder(orderData) {
         const docRef = await addDoc(collection(db, "orders"), orderData);
         return docRef.id;
-      }
+    }
       
-      async function getOrdersByIds(orderIds) {
+    async function getOrdersByIds(orderIds) {
         const orderDocs = await Promise.all(
           orderIds.map(async (orderId) => {
             const orderRef = doc(db, "orders", orderId);
@@ -43,14 +43,21 @@ export function FirestoreProvider({ children }) {
           })
         );
         return orderDocs.filter(Boolean);
-      }
+    }
+
+    async function getProductById(productId) {
+        const docref = doc(db, "products", productId);
+        const docSnap = await getDoc(docref);
+        return docSnap.exists() ? { id: docSnap.id, ...docSnap.data() } : null;
+    }
 
     const value = {
         createUserProfile,
         updateUserProfile,
         getUserProfile,
         createOrder,
-        getOrdersByIds
+        getOrdersByIds,
+        getProductById
     };
 
     return (
