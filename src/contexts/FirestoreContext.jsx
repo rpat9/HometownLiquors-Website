@@ -68,6 +68,12 @@ export function FirestoreProvider({ children }) {
         }
     }
 
+    async function getFavorites(userId) {
+        const userRef = doc(db, "users", userId);
+        const docSnap = await getDoc(userRef);
+        return docSnap.exists() ? docSnap.data().favorites : [];
+    }
+
     const value = {
         createUserProfile,
         updateUserProfile,
@@ -75,7 +81,8 @@ export function FirestoreProvider({ children }) {
         createOrder,
         getOrdersByIds,
         getProductById,
-        toggleFavorite
+        toggleFavorite,
+        getFavorites
     };
 
     return (

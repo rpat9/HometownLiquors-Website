@@ -2,10 +2,11 @@ import { useState, useEffect } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { useFirestore } from "../contexts/FirestoreContext";
 import { toast } from "react-hot-toast";
+import { Link } from "react-router-dom";
 
 export default function Dashboard() {
     const { currentUser, userData, setUserData } = useAuth();
-    const { updateUserProfile, getUserProfile, getOrdersByIds } = useFirestore();
+    const { updateUserProfile, getUserProfile, getOrdersByIds, getFavorites, getProductById } = useFirestore();
 
     const [preferences, setPreferences] = useState({
         lowStock: false,
@@ -14,12 +15,15 @@ export default function Dashboard() {
     });
 
     const [orders, setOrders] = useState([]);
+    const [favoriteProducts, setFavoriteProducts] = useState([]);
+
 
     useEffect(() => {
         if (userData?.notificationPreferences) {
             setPreferences(userData.notificationPreferences);
         }
     }, [userData]);
+
 
     useEffect(() => {
 
@@ -33,12 +37,33 @@ export default function Dashboard() {
         fetchOrders();
     }, [userData]);
 
+
+    useEffect(() => {
+        const fetchFavorites = async () => {
+            if (currentUser) {
+                const favoriteIds = await getFavorites(currentUser.uid);
+                if (favoriteIds?.length) {
+                    const favoriteProductsData = await Promise.all(
+                        favoriteIds.map(async (productId) => {
+                            return await getProductById(productId);
+                        })
+                    );
+                    setFavoriteProducts(favoriteProductsData.filter(Boolean));
+                }
+            }
+        };
+
+        fetchFavorites();
+    }, [currentUser, userData]);
+
+
     const handleToggle = (field) => {
         setPreferences((prev) => ({
             ...prev,
             [field]: !prev[field],
         }));
     };
+
 
     const handleSave = async () => {
         if (currentUser) {
@@ -52,6 +77,7 @@ export default function Dashboard() {
             toast.success("Preferences updated!");
         }
     };
+
 
     return (
         <div className="max-w-4xl mx-auto px-4 lg:px-8 py-10 space-y-10 text-[var(--color-text-primary)]">
@@ -91,8 +117,35 @@ export default function Dashboard() {
                 <h2 className="text-2xl font-semibold mb-2">Your Favorites</h2>
 
                 <div className="border border-[var(--color-border)] p-6 rounded-xl bg-[var(--card-bg)]">
-                    You haven't favorited any products yet. They’ll show up here when you do!
+                    {favoriteProducts.length === 0 ? (
+                        <p>You haven't added any favorites yet.</p>
+                    ) : (
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            {favoriteProducts.map((product) => (
+                                <div
+                                    key={product.id}
+                                    className="border border-[var(--color-border)] p-4 rounded-lg bg-[var(--color-bg)]"
+                                >
+                                    {product.imageUrl && (
+                                        <img 
+                                            src={product.imageUrl} 
+                                            alt={product.name}
+                                            className="w-full h-32 object-contain rounded-md mb-3"
+                                        />
+                                    )}
+
+                                    <Link to={`/products/${product.id}`}>
+                                        <h2 className="text-lg font-semibold mb-1">{product.name}</h2>
+                                    </Link>
+                                    
+                                    <p className="text-[var(--color-primary)] font-bold">${product.price?.toFixed(2)}</p>
+                                </div>
+                            ))}
+                        </div>
+                    )}
                 </div>
+
 
             </section>
 
