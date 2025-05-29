@@ -1,6 +1,6 @@
 import { createContext, useContext } from "react";
 import { db } from "../services/firebase";
-import { collection, doc, setDoc, getDoc, updateDoc, addDoc } from "firebase/firestore";
+import { collection, doc, setDoc, getDoc, updateDoc, addDoc, arrayRemove, arrayUnion } from "firebase/firestore";
 
 const FirestoreContext = createContext();
 
@@ -51,13 +51,31 @@ export function FirestoreProvider({ children }) {
         return docSnap.exists() ? { id: docSnap.id, ...docSnap.data() } : null;
     }
 
+    async function toggleFavorite(userId, productId, isFavorite) {
+        const userRef = doc(db, "users", userId);
+        
+        if (isFavorite) {
+
+            await updateDoc(userRef, {
+                favorites: arrayRemove(productId),
+            })
+
+        } else {
+
+            await updateDoc(userRef, {
+                favorites: arrayUnion(productId),
+            })
+        }
+    }
+
     const value = {
         createUserProfile,
         updateUserProfile,
         getUserProfile,
         createOrder,
         getOrdersByIds,
-        getProductById
+        getProductById,
+        toggleFavorite
     };
 
     return (
