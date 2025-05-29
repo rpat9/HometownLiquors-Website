@@ -1,6 +1,6 @@
 import { createContext, useContext } from "react";
 import { db } from "../services/firebase";
-import { collection, doc, setDoc, getDoc, updateDoc, addDoc, arrayRemove, arrayUnion } from "firebase/firestore";
+import { collection, doc, setDoc, getDoc, updateDoc, addDoc, arrayRemove, arrayUnion, query, where, getDocs, Timestamp } from "firebase/firestore";
 
 const FirestoreContext = createContext();
 
@@ -74,6 +74,26 @@ export function FirestoreProvider({ children }) {
         return docSnap.exists() ? docSnap.data().favorites : [];
     }
 
+    async function getReviewsByProductId(productId) {
+        const reviewsRef = collection(db, "reviews");
+        const q = query(reviewsRef, where("productId", "==", productId));
+        const snapshot = await getDocs(q);
+        return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+    }
+
+    async function addReview(productId, userId, rating, comment) {
+        const review = {
+            productId, 
+            userId, 
+            rating, 
+            comment, 
+            createdAt: Timestamp.now()
+        };
+
+        const reviewsRef = collection(db, "reviews");
+        await addDoc(reviewsRef, review);
+    }
+
     const value = {
         createUserProfile,
         updateUserProfile,
@@ -82,7 +102,9 @@ export function FirestoreProvider({ children }) {
         getOrdersByIds,
         getProductById,
         toggleFavorite,
-        getFavorites
+        getFavorites,
+        getReviewsByProductId,
+        addReview
     };
 
     return (
