@@ -1,30 +1,32 @@
-// ProductDetail.jsx (Restructured + Star Rating Input)
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { useFirestore } from "../contexts/FirestoreContext";
 import { useCart } from "../contexts/CartContext";
 import { toast } from "react-hot-toast";
-import { Star } from "lucide-react";
+import { Star, ShoppingCart } from "lucide-react";
 
 export default function ProductDetail() {
+
   const { id } = useParams();
   const { currentUser } = useAuth();
-  const { getProductById, getReviewsByProductId, addReview } = useFirestore();
+  const { getProductById, getReviewsByProductId, addReview, getUserProfile } = useFirestore();
   const { addToCart } = useCart();
 
   const [product, setProduct] = useState(null);
   const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [reviewerNames, setReviewerNames] = useState({});
 
   const [rating, setRating] = useState(5);
   const [hoverRating, setHoverRating] = useState(0);
   const [comment, setComment] = useState("");
   const [hasReviewed, setHasReviewed] = useState(false);
+  const [averageRating, setAverageRating] = useState(0);
 
   useEffect(() => {
 
-    const fetchProductAndReviews = async () => {
+    const fetchData = async () => {
 
       try {
 
@@ -41,10 +43,22 @@ export default function ProductDetail() {
         const fetchedReviews = await getReviewsByProductId(id);
         setReviews(fetchedReviews);
 
+        const avg = fetchedReviews.reduce((sum, r) => sum + r.rating, 0) / (fetchedReviews.length || 1);
+        setAverageRating(avg);
+
         if (currentUser) {
           const alreadyReviewed = fetchedReviews.some(r => r.userId === currentUser.uid);
           setHasReviewed(alreadyReviewed);
         }
+
+        const nameMap = {};
+
+        for (const review of fetchedReviews) {
+          const profile = await getUserProfile(review.userId);
+          nameMap[review.userId] = profile?.name || "Anonymous";
+        }
+
+        setReviewerNames(nameMap);
 
       } catch (err) {
 
@@ -52,14 +66,15 @@ export default function ProductDetail() {
         console.error("Error loading product:", err);
 
       } finally {
+
         setLoading(false);
+
       }
     };
 
-    fetchProductAndReviews();
+    fetchData();
 
   }, [id, currentUser]);
-
 
   const handleSubmitReview = async (e) => {
 
@@ -77,11 +92,24 @@ export default function ProductDetail() {
       const updatedReviews = await getReviewsByProductId(id);
       setReviews(updatedReviews);
 
+      const avg = updatedReviews.reduce((sum, r) => sum + r.rating, 0) / (updatedReviews.length || 1);
+      setAverageRating(avg);
+
+      const nameMap = {};
+
+      for (const review of updatedReviews) {
+        const profile = await getUserProfile(review.userId);
+        nameMap[review.userId] = profile?.name || "Anonymous";
+      }
+
+      setReviewerNames(nameMap);
+
     } catch (err) {
+
       console.error("Failed to add review:", err);
       toast.error("Failed to submit review");
-    }
 
+    }
   };
 
   if (loading) {
@@ -96,6 +124,7 @@ export default function ProductDetail() {
     <div className="max-w-5xl mx-auto px-6 lg:px-8 py-10 text-[var(--color-text-primary)]">
 
       <div className="flex flex-col lg:flex-row gap-10">
+
         <div className="bg-[var(--card-bg)] border border-[var(--color-border)] rounded-xl w-full lg:w-1/2">
 
           <img
@@ -114,12 +143,24 @@ export default function ProductDetail() {
             ${product.price.toFixed(2)}
           </p>
 
-          {product.rating ? (
+          {reviews.length > 0 ? (
 
-            <p>
-              {"★".repeat(Math.floor(product.rating))}
-              {"☆".repeat(5 - Math.floor(product.rating))} ({product.rating.toFixed(1)})
-            </p>
+            <div className="flex items-center space-x-1">
+
+              {[1, 2, 3, 4, 5].map(star => (
+
+                <Star
+                  key={star}
+                  size={20}
+                  fill={star <= averageRating ? "var(--color-primary)" : "none"}
+                  stroke="var(--color-primary)"
+                />
+
+              ))}
+
+              <span className="text-sm">({averageRating.toFixed(1)})</span>
+
+            </div>
 
           ) : (
 
@@ -128,6 +169,7 @@ export default function ProductDetail() {
           )}
 
           <p className="text-sm">Category: {product.category}</p>
+
           <p className="text-sm">Stock: {product.quantity} available</p>
 
           <button
@@ -135,12 +177,14 @@ export default function ProductDetail() {
               addToCart(product);
               toast.success("Added to cart!");
             }}
-            className="btn-primary btn-hover mt-4"
+            className="btn-primary btn-hover mt-4 flex align-center"
           >
+            <ShoppingCart className="mr-2" />
             Add to Cart
           </button>
 
         </div>
+
       </div>
 
       <hr className="my-10" />
@@ -152,22 +196,39 @@ export default function ProductDetail() {
         <p className="text-gray-500 mb-6">No reviews yet — be the first to write one!</p>
 
       ) : (
+
         <div className="space-y-4 mb-8">
 
           {reviews.map((review) => (
+
             <div
               key={review.id}
-              className="bg-[var(--card-bg)] border border-[var(--color-border)] p-4 rounded-lg"
+              className="bg-[var(--card-bg)] border border-[var(--color-border)] p-4 rounded-lg mb-4"
             >
 
-              <p className="font-semibold">
-                {"★".repeat(review.rating)}{"☆".repeat(5 - review.rating)}
-              </p>
+              <div className="flex items-center justify-between mb-1">
+
+                <p className="font-semibold text-[var(--color-primary)]">
+                  {reviewerNames[review.userId] || "User"}
+                </p>
+
+                <div className="flex space-x-1">
+                  {[1, 2, 3, 4, 5].map(star => (
+
+                    <Star
+                      key={star}
+                      size={18}
+                      fill={star <= review.rating ? "var(--color-primary)" : "none"}
+                      stroke="var(--color-primary)"
+                    />
+
+                  ))}
+                </div>
+
+              </div>
 
               {review.comment && <p className="text-sm mt-1">{review.comment}</p>}
-
             </div>
-
           ))}
 
         </div>
@@ -219,6 +280,7 @@ export default function ProductDetail() {
 
         </form>
       )}
+
     </div>
   );
 }

@@ -6,16 +6,17 @@ import { useFirestore } from "../contexts/FirestoreContext";
 import { useAuth } from "../contexts/AuthContext";
 import { toast } from "react-hot-toast";
 import { Link } from "react-router-dom";
-import { Heart, ShoppingCart } from "lucide-react"
+import { Heart, ShoppingCart, Star } from "lucide-react"
 
 
 export default function Products() {
 
     const [products, setProducts] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [ratingsMap, setRatingsMap] = useState({});
 
     const { currentUser, userData, setUserData } = useAuth();
-    const { toggleFavorite, getUserProfile } = useFirestore();
+    const { toggleFavorite, getUserProfile, getAllReviewsGroupedByProduct } = useFirestore();
     const { addToCart } = useCart();
 
     useEffect(() => {
@@ -27,6 +28,18 @@ export default function Products() {
                 const productList = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
 
                 setProducts(productList);
+
+                const allReviews = await getAllReviewsGroupedByProduct();
+                
+                const avgMap = {};
+
+                for (const productId in allReviews) {
+                    const reviews = allReviews[productId];
+                    const avg = reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length;
+                    avgMap[productId] = avg;
+                }
+
+                setRatingsMap(avgMap);
 
             } catch (err) {
 
@@ -117,16 +130,20 @@ export default function Products() {
 
                             <p className="text-[var(--color-primary)] font-bold mb-1">${product.price.toFixed(2)}</p>
 
-                            {product.rating ? (
-                                <p className="text-sm mb-1">
-                                    {"★".repeat(Math.floor(product.rating))}
-                                    {"☆".repeat(5 - Math.floor(product.rating))} ({product.rating.toFixed(1)})
-                                </p>
-
-                            ) : (
-
-                                <p className="text-sm text-gray-500 mb-1">No reviews yet — be the first!</p>
-
+                            {ratingsMap[product.id] ? (
+                                <div className="flex items-center text-sm mb-1">
+                                    {[1, 2, 3, 4, 5].map((star) => (
+                                    <Star
+                                        key={star}
+                                        size={16}
+                                        fill={star <= ratingsMap[product.id] ? "var(--color-primary)" : "none"}
+                                        stroke="var(--color-primary)"
+                                    />
+                                    ))}
+                                    <span className="ml-2">({ratingsMap[product.id].toFixed(1)})</span>
+                                </div>
+                                ) : (
+                                <p className="text-sm text-gray-500 mb-1">No reviews yet</p>
                             )}
 
                             <button
