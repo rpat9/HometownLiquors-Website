@@ -35,6 +35,7 @@ export default function Signup() {
                 createdAt: new Date(),
                 email,
                 name,
+                role: 'user',
                 userId,
                 password,
                 notificationPreferences: {
