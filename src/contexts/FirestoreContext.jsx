@@ -149,6 +149,29 @@ export function FirestoreProvider({ children }) {
     }
 
 
+    async function getAllProducts() {
+        const snapshot = await getDocs(collection(db, "products"));
+        return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    }
+
+
+    async function addProduct(productData) {
+        const docRef = await addDoc(collection(db, "products"), productData)
+        return docRef.id;
+    }
+
+
+    async function updateProduct(productId, updates) {
+        const productRef = doc(db, "products", productId);
+        await updateDoc(productRef, updates)
+    }
+
+
+    async function deleteProduct(productId) {
+        await deleteDoc(doc(db, "products", productId));
+    }
+
+
     const value = {
         createUserProfile,
         updateUserProfile,
@@ -160,7 +183,11 @@ export function FirestoreProvider({ children }) {
         getFavorites,
         getReviewsByProductId,
         addReview,
-        getAllReviewsGroupedByProduct
+        getAllReviewsGroupedByProduct,
+        getAllProducts,
+        addProduct,
+        updateProduct,
+        deleteProduct
     };
 
 
