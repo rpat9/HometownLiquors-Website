@@ -110,7 +110,7 @@ export default function Products() {
                             <img
                                 src={product.imageUrl || "/placeholder.jpg"}
                                 alt={product.name}
-                                className="w-full h-48 object-fill rounded mb-4"
+                                className="w-full h-48 object-contain aspect-square rounded mb-4"
                             />
 
                             <div className="flex justify-between items-center align-middle mb-2">
