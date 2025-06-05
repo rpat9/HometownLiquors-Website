@@ -136,3 +136,5 @@ dist
 .pnp.*
 
 cors.json
+hometown-liquors-firebase-adminsdk.json
+src/services/setAdmin.cjs
