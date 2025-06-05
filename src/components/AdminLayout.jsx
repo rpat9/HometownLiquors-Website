@@ -1,160 +1,162 @@
-import { useState } from "react";
-import { Link, Outlet, useLocation } from "react-router-dom";
-import { Menu, X, UserCircle, LayoutDashboard, PackageSearch, BarChart3, Bell } from "lucide-react";
-import { useAuth } from "../contexts/AuthContext";
+import { useState } from 'react';
+import { Outlet, Link, useLocation } from 'react-router-dom';
+import { BarChart3, Package, ShoppingCart, TrendingUp, Bell, Settings, FileText, Wine, Search, Menu, X } from 'lucide-react';
+import { useAuth } from "../contexts/AuthContext"
 
-export default function AdminLayout() {
+export default function AdminLayout(){
 
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-  const { userData } = useAuth();
+  const [sidebarOpen, setSidebarOpen] = useState(true);
   const location = useLocation();
+  const { userData } = useAuth();
 
-  const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
-
-  const navItems = [
-    { path: "/admin", icon: LayoutDashboard, label: "Dashboard" },
-    { path: "/admin/manage-products", icon: PackageSearch, label: "Manage Products" },
-    { path: "/admin/orders", icon: BarChart3, label: "Orders" },
+  const navigationItems = [
+    { id: 'dashboard', label: 'Dashboard', icon: BarChart3, path: '/admin', exact: true },
+    { id: 'manage-products', label: 'Manage Products', icon: Package, path: '/admin/manage-products' },
+    { id: 'orders', label: 'View Orders', icon: ShoppingCart, path: '/admin/orders' },
+    { id: 'analytics', label: 'Analytics', icon: TrendingUp, path: '/admin/analytics' },
+    { id: 'reports', label: 'Reports', icon: FileText, path: '/admin/reports' },
+    { id: 'notifications', label: 'Notifications', icon: Bell, path: '/admin/notifications' },
+    { id: 'settings', label: 'Settings', icon: Settings, path: '/admin/settings' }
   ];
 
-  const isActive = (path) => location.pathname === path;
+  const isActivePath = (path, exact = false) =>
+    exact ? location.pathname === path : location.pathname.startsWith(path);
+
+  const getPageTitle = () => {
+    const current = navigationItems.find(item =>
+      item.exact ? location.pathname === item.path : location.pathname.startsWith(item.path)
+    );
+    return current ? current.label : 'Admin';
+  };
+
+  const getPageDescription = () => {
+
+    const map = {
+      '/admin': "Welcome back! Here's what's happening with your store.",
+      '/admin/manage-products': 'Manage your liquor inventory, pricing, and product information.',
+      '/admin/orders': 'Process orders, track shipments, and manage customer purchases.',
+      '/admin/analytics': 'Track sales performance and trends.',
+      '/admin/reports': 'Generate financial and business reports.',
+      '/admin/notifications': 'View system alerts and updates.',
+      '/admin/settings': 'Configure store settings and preferences.'
+    };
+
+    return map[location.pathname] || `Manage your ${getPageTitle().toLowerCase()} efficiently.`;
+  };
 
   return (
     <div className="flex min-h-screen bg-[var(--color-bg)] text-[var(--color-text-primary)]">
       
-      <aside
-        className={`${
-          isSidebarOpen ? "w-64" : "w-25"
-        } bg-[var(--card-bg)] border-r border-[var(--color-border)] transition-all duration-300 hidden lg:block shadow-md`}
-      >
+      <aside className={`flex flex-col w-64 bg-[var(--card-bg)] shadow-md border-r border-[var(--color-border)] transform transition-transform duration-300 z-50 fixed lg:static ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0 min-h-screen`}>
         
-        <div className="flex items-center justify-between px-4 py-6.5 border-b border-[var(--color-border)]">
+        
+        <div className="flex items-center justify-between p-6 h-26 border-b border-[var(--color-border)]">
 
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-3">
 
-            <div className="w-8 h-8 bg-[var(--color-primary)] rounded-lg flex items-center justify-center">
-
-              <span className="text-white font-bold text-sm">HL</span>
-
+            <div className="w-8 h-9 bg-[var(--color-primary)] rounded-lg flex items-center justify-center">
+              <Wine className="w-5 h-5 text-white" />
             </div>
-
-            {isSidebarOpen && (
-
-              <span className="text-lg font-bold text-[var(--color-primary)]">
-                Admin Panel
-              </span>
-
-            )}
+        
+            <h1 className="text-xl font-bold text-[var(--color-text-primary)]">HL Admin</h1>
 
           </div>
 
-          <button 
-            onClick={toggleSidebar} 
-            className="p-1 hover:bg-[var(--color-bg)] cursor-pointer rounded transition-colors"
+          <button
+            onClick={() => setSidebarOpen(false)}
+            className="lg:hidden text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] cursor-pointer"
           >
-
-            {isSidebarOpen ? <X size={18} /> : <Menu size={18} />}
-
+            <X className="w-5 h-5" />
           </button>
 
         </div>
 
         
-        <nav className="p-2 space-y-1">
-
-          {navItems.map((item) => {
-            const Icon = item.icon;
-            const active = isActive(item.path);
-            
-            return (
-
-              <Link
-                key={item.path}
-                to={item.path}
-                className={`flex items-center space-x-3 px-4 py-2 rounded-lg transition-colors w-full ${
-                  active 
-                    ? 'bg-[var(--color-primary)] text-white' 
-                    : 'hover:bg-[var(--color-bg)] text-[var(--color-text-primary)]'
-                }`}
-              >
-
-                <Icon size={20} />
-
-                {isSidebarOpen && <span className="font-medium">{item.label}</span>}
-
-              </Link>
-            );
-
-          })}
-
+        <nav className="flex-1 px-4 pt-4 space-y-2">
+          {navigationItems.map(item => (
+            <Link
+              key={item.id}
+              to={item.path}
+              onClick={() => setSidebarOpen(false)}
+              className={`flex items-center px-4 py-2 rounded-lg transition-all duration-200 space-x-3 ${
+                isActivePath(item.path, item.exact)
+                  ? 'bg-[var(--color-primary)] bg-opacity-10 text-white font-medium border-r-2 border-[var(--color-primary)]'
+                  : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-bg)] hover:bg-opacity-50'
+              }`}
+            >
+              <item.icon className="w-5 h-5" />
+              <span>{item.label}</span>
+            </Link>
+          ))}
         </nav>
 
       </aside>
 
       
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col min-h-screen transition-all duration-300 ">
         
-        <header className="sticky top-0 z-10 flex items-center justify-between px-6 py-4 border-b border-[var(--color-border)] bg-[var(--card-bg)] shadow-sm">
+        <header className="sticky top-0 z-40 bg-[var(--card-bg)] border-b border-[var(--color-border)] shadow-sm px-6 py-4 h-26">
 
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center justify-between">
 
-            <button onClick={toggleSidebar} className="lg:hidden p-2 hover:bg-[var(--color-bg)] rounded">
-              <Menu size={20} />
-            </button>
+            <div className="flex items-center space-x-4">
 
-            <div>
+              <button
+                onClick={() => setSidebarOpen(!sidebarOpen)}
+                className="lg:hidden text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] cursor-pointer"
+              >
+                <Menu className="w-6 h-6" />
+              </button>
 
-              <h1 className="text-2xl font-bold text-[var(--color-text-primary)]">
-                Hometown Liquors Admin
-              </h1>
-
-              <p className="text-sm text-[var(--color-text-secondary)] opacity-70">
-                Manage your store operations
-              </p>
-
-            </div>
-
-          </div>
-
-          <div className="flex items-center space-x-4">
-
-            <button className="p-2 hover:bg-[var(--color-bg)] rounded-lg transition-colors relative cursor-pointer">
-
-              <Bell size={20} />
-
-              <span className="absolute -top-1 -right-1 w-3 h-3 bg-[var(--color-primary)] rounded-full"></span>
-
-            </button>
-
-            <div className="flex items-center space-x-3 pl-4 border-l border-[var(--color-border)] cursor-pointer hover:bg-[var(--color-bg)]">
-
-              <div className="text-right">
-
-                <p className="text-sm font-medium">{userData?.name || "Admin"}</p>
-
-                <p className="text-xs text-[var(--color-text-secondary)] opacity-70">Administrator</p>
-
-              </div>
-
-              <div className="w-8 h-8 bg-[var(--color-primary)] rounded-full flex items-center justify-center">
-
-                <UserCircle className="text-white" size={18} />
-
+              <div>
+                <h1 className="text-2xl font-bold">{getPageTitle()}</h1>
+                <p className="text-sm text-[var(--color-text-secondary)]">{getPageDescription()}</p>
               </div>
 
             </div>
 
-          </div>
+            <div className="flex items-center space-x-4">
 
+              <div className="relative hidden lg:block">
+
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[var(--color-text-secondary)] w-4 h-4 cursor-pointer" />
+
+                <input
+                  type="text"
+                  placeholder="Search..."
+                  className="pl-10 pr-4 py-2 border border-[var(--color-border)] bg-[var(--color-bg)] rounded-lg text-[var(--color-text-primary)] placeholder-[var(--color-text-secondary)]"
+                />
+
+              </div>
+
+              <button className="relative p-2 hover:bg-[var(--color-bg)] rounded-lg text-[var(--color-text-secondary)] cursor-pointer">
+                <Bell className="w-5 h-5" />
+                <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full animate-pulse"></span>
+              </button>
+
+              <div className="flex gap-2 cursor-default items-center">
+                  <div className="w-8 h-8 bg-[var(--color-primary)] rounded-full flex items-center justify-center text-white text-sm font-semibold">
+                  {userData?.name.slice(0, 2).toUpperCase() || "A"}
+                  </div>
+
+                  <div className="hidden lg:block text-left">
+                    <p className="text-sm font-medium text-[var(--color-text-primary)]">Store Owner</p>
+                    <p className="text-xs text-[var(--color-text-secondary)]">{userData?.name.toUpperCase() || "ADMIN"}</p>
+                  </div>
+
+              </div>
+
+            </div>
+
+          </div>
         </header>
 
-        <main className="flex-1 p-6 bg-[var(--color-bg)]">
-
+        
+        <main className="p-6">
           <Outlet />
-
         </main>
 
       </div>
     </div>
   );
-}
+};
