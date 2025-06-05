@@ -1,6 +1,6 @@
 import { createContext, useContext } from "react";
 import { db } from "../services/firebase";
-import { collection, doc, setDoc, getDoc, updateDoc, addDoc, arrayRemove, arrayUnion, query, where, getDocs, Timestamp } from "firebase/firestore";
+import { collection, doc, setDoc, getDoc, updateDoc, addDoc, arrayRemove, arrayUnion, query, where, getDocs, Timestamp, limit, orderBy } from "firebase/firestore";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage"
 
 const FirestoreContext = createContext();
@@ -151,6 +151,41 @@ export function FirestoreProvider({ children }) {
     }
 
 
+    async function getDashboardStats() {
+        const [ordersSnap, productsSnap, usersSnap] = await Promise.all([
+            getDocs(collection(db, "orders")),
+            getDocs(collection(db, "products")),
+            getDocs(collection(db, "users"))
+        ])
+
+        const orders = ordersSnap.docs.map(doc => doc.data());
+
+        const totalRevenue = orders.reduce((sum, order) => sum + (order.total || 0), 0);
+        const totalOrders = orders.length;
+        const totalProducts = productsSnap.size;
+        const totalCustomers = usersSnap.filter(doc => doc.data().role === "user").length;
+
+        return { totalRevenue, totalOrders, totalProducts, totalCustomers };
+    }
+
+
+    async function getRecentOrders(limitCount = 5) {
+        const q = query(collection(db, "orders"), orderBy("createdAt", "desc"), limit(limitCount));
+        const snapshot = await getDocs(q);
+        return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    }
+
+
+    async function getTopProducts(limitCount = 5) {
+        const snapshot = await getDocs(collection(db, "products"));
+        const products = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+        return products.sort(
+            (a, b) => (b.reviews?.length || 0) - (a.reviews?.length || 0)
+        ).slice(0, limitCount);
+    }
+
+
     const value = {
         createUserProfile,
         updateUserProfile,
@@ -167,7 +202,10 @@ export function FirestoreProvider({ children }) {
         addProduct,
         updateProduct,
         deleteProduct,
-        uploadImage
+        uploadImage,
+        getDashboardStats,
+        getRecentOrders,
+        getTopProducts
     };
 
 
