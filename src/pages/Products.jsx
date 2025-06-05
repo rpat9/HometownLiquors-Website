@@ -104,7 +104,7 @@ export default function Products() {
 
                         <div
                             key={product.id}
-                            className="bg-[var(--card-bg)] border border-[var(--color-border)] rounded-xl p-4 flex flex-col justify-between"
+                            className="bg-[var(--card-bg)] border border-[var(--color-border)] rounded-lg p-2 flex flex-col justify-between"
                         >
 
                             <img
