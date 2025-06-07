@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Package, ShoppingCart, DollarSign } from "lucide-react";
 import { useFirestore } from "../../contexts/FirestoreContext";
 import TopSellingProducts from "./TopSellingProducts";
+import RecentActivity from "./RecentActivity";
 
 export default function Admin() {
   const { getAllProducts, getAllOrders } = useFirestore();
@@ -94,8 +95,17 @@ export default function Admin() {
 
       
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-        <TopSellingProducts />
+
+        <div className="xl:col-span-2">
+          <TopSellingProducts />
+        </div>
+
+        <div className="xl:col-span-1">
+          <RecentActivity />
+        </div>
+        
       </div>
+
     </div>
   );
 }
