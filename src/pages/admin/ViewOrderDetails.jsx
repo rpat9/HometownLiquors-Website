@@ -120,7 +120,7 @@ export default function ViewOrderDetails({ open, order, onClose }) {
 
           <button 
             onClick={onClose} 
-            className="p-2 rounded-lg hover:bg-[var(--color-bg)] text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors"
+            className="p-2 cursor-pointer rounded-lg hover:bg-[var(--color-bg)] text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors"
           >
             <X size={20} />
           </button>
@@ -178,7 +178,7 @@ export default function ViewOrderDetails({ open, order, onClose }) {
                     <div className={`w-3 h-3 rounded-full ${
                       order.orderStatus === "Processing" ? "bg-yellow-500" :
                       order.orderStatus === "Shipped" ? "bg-blue-500" :
-                      order.orderStatus === "Delivered" ? "bg-green-500" :
+                      order.orderStatus === "Completed" ? "bg-green-500" :
                       order.orderStatus === "Cancelled" ? "bg-red-500" : "bg-gray-500"
                     }`} />
 
@@ -192,7 +192,7 @@ export default function ViewOrderDetails({ open, order, onClose }) {
                       >
                         <option value="Processing">Processing</option>
                         <option value="Shipped">Shipped</option>
-                        <option value="Delivered">Delivered</option>
+                        <option value="Completed">Completed</option>
                         <option value="Cancelled">Cancelled</option>
                       </select>
 
