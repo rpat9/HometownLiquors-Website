@@ -192,6 +192,12 @@ export function FirestoreProvider({ children }) {
     }
 
 
+    async function updateOrderStatus(orderId, newStatus) {
+        const orderRef = doc(db, "orders", orderId);
+        await updateDoc(orderRef, { orderStatus: newStatus });
+    }
+
+
     const value = {
         createUserProfile,
         updateUserProfile,
@@ -212,7 +218,8 @@ export function FirestoreProvider({ children }) {
         uploadImage,
         getDashboardStats,
         getRecentOrders,
-        getTopProducts
+        getTopProducts,
+        updateOrderStatus
     };
 
 

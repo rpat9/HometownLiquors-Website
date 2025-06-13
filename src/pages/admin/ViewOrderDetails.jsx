@@ -1,15 +1,24 @@
 import { useEffect, useState } from "react";
-import { X, Package, User, Calendar, DollarSign, FileText } from "lucide-react";
+import { X, Package, User, DollarSign, FileText } from "lucide-react";
 import { useFirestore } from "../../contexts/FirestoreContext";
+import toast from "react-hot-toast";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 
 export default function ViewOrderDetails({ open, order, onClose }) {
-  const { getUserProfile, getProductById } = useFirestore();
+
+  const { getUserProfile, getProductById, updateOrderStatus } = useFirestore();
+
   const [user, setUser] = useState(null);
   const [products, setProducts] = useState([]);
+  const [statusUpdating, setStatusUpdating] = useState(false);
+  const [selectedStatus, setSelectedStatus] = useState(order?.orderStatus || "Processing");
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!order || !open) return;
+
+    setSelectedStatus(order.orderStatus);
 
     async function fetchDetails() {
       try {
@@ -46,6 +55,48 @@ export default function ViewOrderDetails({ open, order, onClose }) {
     }).format(date);
   };
 
+  const handleStatusUpdate = async () => {
+
+    if (selectedStatus === order.orderStatus) {
+      toast("No changes made");
+      return;
+    }
+
+    try {
+
+      setStatusUpdating(true);
+      await updateOrderStatus(order.id, selectedStatus);
+      order.orderStatus = selectedStatus;
+      toast.success("Order status updated");
+
+    } catch (err) {
+
+      console.error("Failed to update order status:", err);
+      toast.error("Couldn't update order status");
+
+    } finally {
+      setStatusUpdating(false);
+    }
+  };
+
+  const handleReceipt = () => {
+    const doc = new jsPDF();
+    doc.text("Order Receipt", 14, 16);
+
+    autoTable(doc, {
+      startY: 20,
+      head: [["Product", "Quantity", "Unit Price", "Subtotal"]],
+      body: products.map((p) => [
+        p.name,
+        p.quantity,
+        `$${p.price.toFixed(2)}`,
+        `$${p.subtotal.toFixed(2)}`
+      ]),
+    });
+
+    doc.save("orderReceipt.pdf");
+  };
+
   if (!open || !order) return null;
 
   return (
@@ -66,12 +117,14 @@ export default function ViewOrderDetails({ open, order, onClose }) {
         
         <div className="flex items-center justify-between p-6 border-b border-[var(--color-border)]">
           <h2 className="text-xl font-bold text-[var(--color-text-primary)]">Order Details</h2>
+
           <button 
             onClick={onClose} 
             className="p-2 rounded-lg hover:bg-[var(--color-bg)] text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors"
           >
             <X size={20} />
           </button>
+
         </div>
 
         
@@ -86,6 +139,7 @@ export default function ViewOrderDetails({ open, order, onClose }) {
               <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-6">
 
                 <div className="flex items-center gap-3 mb-4">
+
                   <div className="p-2 bg-blue-100 rounded-lg">
                     <Package className="w-5 h-5 text-blue-600" />
                   </div>
@@ -107,12 +161,14 @@ export default function ViewOrderDetails({ open, order, onClose }) {
                   <div className="flex items-center gap-3">
 
                     <DollarSign className="w-4 h-4 text-green-600" />
+
                     <div>
                       <p className="text-sm text-gray-600">Total Amount</p>
 
                       <p className="font-semibold text-green-600">
-                        ${order.orderTotal.toFixed(2)}
+                        {order.orderTotal.toFixed(2)}
                       </p>
+
                     </div>
 
                   </div>
@@ -128,7 +184,18 @@ export default function ViewOrderDetails({ open, order, onClose }) {
 
                     <div>
                       <p className="text-sm text-gray-600">Status</p>
-                      <p className="font-semibold">{order.orderStatus}</p>
+
+                      <select
+                        value={selectedStatus}
+                        onChange={(e) => setSelectedStatus(e.target.value)}
+                        className="mt-1 p-2 border border-gray-300 rounded-lg text-sm text-gray-700"
+                      >
+                        <option value="Processing">Processing</option>
+                        <option value="Shipped">Shipped</option>
+                        <option value="Delivered">Delivered</option>
+                        <option value="Cancelled">Cancelled</option>
+                      </select>
+
                     </div>
 
                   </div>
@@ -156,10 +223,12 @@ export default function ViewOrderDetails({ open, order, onClose }) {
                   </div>
 
                   {user?.email && (
+
                     <div>
                       <p className="text-sm text-gray-600">Email</p>
                       <p className="font-medium">{user.email}</p>
                     </div>
+
                   )}
 
                   <div>
@@ -176,9 +245,11 @@ export default function ViewOrderDetails({ open, order, onClose }) {
 
                   <div>
                     <p className="text-sm text-gray-600">Total Orders</p>
+
                     <p className="font-medium">
                       {user?.orderHistory ? user.orderHistory.length : 0}
                     </p>
+
                   </div>
 
                 </div>
@@ -186,14 +257,17 @@ export default function ViewOrderDetails({ open, order, onClose }) {
 
               {order.pickupInstructions && (
                 <div className="bg-amber-50 border border-amber-200 rounded-xl p-6">
+
                   <div className="flex items-center gap-3 mb-3">
 
                     <div className="p-2 bg-amber-100 rounded-lg">
                       <FileText className="w-5 h-5 text-amber-600" />
                     </div>
+
                     <h3 className="font-semibold text-lg">Pickup Instructions</h3>
 
                   </div>
+
                   <p className="text-gray-700 leading-relaxed">
                     {order.pickupInstructions}
                   </p>
@@ -205,9 +279,13 @@ export default function ViewOrderDetails({ open, order, onClose }) {
                 <h3 className="font-semibold text-lg mb-4">Order Items ({products.length})</h3>
                 
                 <div className="space-y-4">
+
                   {products.map((product, index) => (
+
                     <div key={index} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+
                       <div className="flex-1">
+
                         <h4 className="font-medium text-gray-900">{product.name}</h4>
 
                         <div className="flex items-center gap-4 mt-2 text-sm text-gray-600">
@@ -217,14 +295,17 @@ export default function ViewOrderDetails({ open, order, onClose }) {
                         </div>
 
                         {product.description && (
+
                           <p className="text-xs text-gray-500 mt-1 line-clamp-2">
                             {product.description}
                           </p>
+
                         )}
 
                       </div>
                       
                       <div className="text-right ml-4">
+
                         <p className="font-semibold text-lg">
                           ${product.subtotal.toFixed(2)}
                         </p>
@@ -248,12 +329,20 @@ export default function ViewOrderDetails({ open, order, onClose }) {
               <div className="sticky bottom-0 bg-[var(--card-bg)] border-t border-[var(--color-border)] p-6 -mx-6">
 
                 <div className="flex gap-3">
-                  <button className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-3 px-4 rounded-lg font-medium transition-colors">
-                    Update Status
+                  <button
+                    onClick={handleStatusUpdate}
+                    disabled={statusUpdating}
+                    className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-3 px-4 rounded-lg font-medium cursor-pointer transition-colors"
+                  >
+                    {statusUpdating ? "Updating..." : "Update Status"}
                   </button>
-                  <button className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 py-3 px-4 rounded-lg font-medium transition-colors">
-                    Print Receipt
+
+                  <button 
+                  onClick={handleReceipt}
+                  className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 py-3 px-4 rounded-lg font-medium cursor-pointer transition-colors">
+                    Receipt PDF
                   </button>
+
                 </div>
 
               </div>
