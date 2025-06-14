@@ -2,6 +2,7 @@ import { useFirestore } from "../../contexts/FirestoreContext";
 import { useEffect, useState } from "react";
 import { Pencil, Trash2, Eye, ArrowUpDown } from "lucide-react";
 import { toast } from "react-hot-toast";
+import ViewProductDetails from "./ViewProductDetails";
 
 export default function ManageProducts() {
 
@@ -10,6 +11,8 @@ export default function ManageProducts() {
   const [sortKey, setSortKey] = useState(null);
   const [sortOrder, setSortOrder] = useState("asc");
   const [showAddForm, setShowAddForm] = useState(false)
+  const [selectedProduct, setSelectedProduct] = useState(null);
+  const [ratingsMap, setRatingsMap] = useState({});
   const [newProduct, setNewProduct] = useState({
     name: "",
     category: "",
@@ -19,7 +22,7 @@ export default function ManageProducts() {
     imageFile: null,
   });
 
-  const { getAllProducts, deleteProduct, addProduct, uploadImage } = useFirestore();
+  const { getAllProducts, deleteProduct, addProduct, uploadImage, getAllReviewsGroupedByProduct } = useFirestore();
 
   useEffect(() => {
 
@@ -27,6 +30,17 @@ export default function ManageProducts() {
       try {
         const items = await getAllProducts();
         setProducts(items);
+
+        const allReviews = await getAllReviewsGroupedByProduct();
+        const avgMap = {};
+
+        for (const productId in allReviews) {
+          const reviews = allReviews[productId];
+          const avg = reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length;
+          avgMap[productId] = avg;
+        }
+
+        setRatingsMap(avgMap);
 
       } catch (err) {
         console.error(err);
@@ -53,14 +67,21 @@ export default function ManageProducts() {
 
 
   const handleSort = (key) => {
-
     const order = sortKey === key && sortOrder === "asc" ? "desc" : "asc";
     setSortKey(key);
     setSortOrder(order);
 
     const sorted = [...products].sort((a, b) => {
-      const valA = typeof a[key] === "string" ? a[key].toLowerCase() : a[key];
-      const valB = typeof b[key] === "string" ? b[key].toLowerCase() : b[key];
+      let valA, valB;
+      
+      if (key === "rating") {
+        valA = ratingsMap[a.id] || 0;
+        valB = ratingsMap[b.id] || 0;
+      } else {
+        valA = typeof a[key] === "string" ? a[key].toLowerCase() : a[key];
+        valB = typeof b[key] === "string" ? b[key].toLowerCase() : b[key];
+      }
+      
       return order === "asc" ? (valA > valB ? 1 : -1) : (valA < valB ? 1 : -1);
     });
 
@@ -91,8 +112,6 @@ export default function ManageProducts() {
         quantity: parseFloat(newProduct.quantity),
         imageUrl: imageDownloadUrl,
         createdAt: new Date(),
-        rating: 0,
-        reviews: [],
         updatedAt: new Date()
       }
 
@@ -252,16 +271,21 @@ export default function ManageProducts() {
                   <td className="p-3 text-left">{product.quantity}</td>
 
                   <td className="p-3 text-left">
-                    {product.rating ? (
-                      <span className="text-[var(--color-primary)]">{product.rating.toFixed(1)}</span>
+                    {ratingsMap[product.id] ? (
+                      <span className="text-[var(--color-primary)]">{ratingsMap[product.id].toFixed(1)}</span>
                     ) : (
                       <span className="text-gray-500">—</span>
                     )}
                   </td>
 
                   <td className="p-5 flex justify-center space-x-3">
-                    <button className="text-blue-600 cursor-pointer"><Eye size={20} /></button>
-                    <button className="text-yellow-600 cursor-pointer"><Pencil size={20} /></button>
+                    <button
+                      className="text-yellow-600 cursor-pointer"
+                      onClick={() => setSelectedProduct(product)}
+                    >
+                      <Pencil size={20} />
+                    </button>
+
                     <button onClick={() => handleDelete(product.id)} className="text-red-600 cursor-pointer"><Trash2 size={20} /></button>
                   </td>
                 </tr>
@@ -269,6 +293,14 @@ export default function ManageProducts() {
             </tbody>
           </table>
         </div>
+      )}
+
+      {selectedProduct && (
+        <ViewProductDetails
+          open={!!selectedProduct}
+          product={selectedProduct}
+          onClose={() => setSelectedProduct(null)}
+        />
       )}
     </div>
   );
