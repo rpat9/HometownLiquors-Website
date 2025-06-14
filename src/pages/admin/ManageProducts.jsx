@@ -13,6 +13,7 @@ export default function ManageProducts() {
   const [showAddForm, setShowAddForm] = useState(false)
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [ratingsMap, setRatingsMap] = useState({});
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [newProduct, setNewProduct] = useState({
     name: "",
     category: "",
@@ -52,8 +53,12 @@ export default function ManageProducts() {
     };
 
     fetchProducts();
-  }, []);
+  }, [refreshTrigger]);
 
+  
+  const refreshData = () => {
+    setRefreshTrigger(prev => prev + 1);
+  };
 
   const handleDelete = async (id) => {
 
@@ -119,8 +124,7 @@ export default function ManageProducts() {
       toast.success("Product added successfully");
       setShowAddForm(false);
       setNewProduct({ name: "", category: "", price: "", quantity: "", imageUrl: "", imageFile: null });
-      const updatedList = await getAllProducts();
-      setProducts(updatedList);
+      refreshData();
 
     } catch(err) {
       console.error(err);
@@ -300,6 +304,7 @@ export default function ManageProducts() {
           open={!!selectedProduct}
           product={selectedProduct}
           onClose={() => setSelectedProduct(null)}
+          onProductUpdate={refreshData} // Pass refresh function
         />
       )}
     </div>

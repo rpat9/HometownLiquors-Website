@@ -4,7 +4,7 @@ import { useFirestore } from "../../contexts/FirestoreContext";
 import toast from "react-hot-toast";
 
 export default function ViewProductDetails({ open, product, onClose, onProductUpdate }) {
-  const { getReviewsByProductId, updateProduct, deleteProduct } = useFirestore();
+  const { getReviewsByProductId, updateProduct, deleteProduct, uploadImage } = useFirestore();
   const [reviews, setReviews] = useState([]);
   const [averageRating, setAverageRating] = useState(0);
   const [editMode, setEditMode] = useState(false);
@@ -15,7 +15,7 @@ export default function ViewProductDetails({ open, product, onClose, onProductUp
   useEffect(() => {
     if (!open || !product) return;
     setEditMode(false);
-    setEditableProduct({ ...product });
+    setEditableProduct({ ...product, imageFile: null });
 
     async function fetchReviews() {
       try {
@@ -54,8 +54,17 @@ export default function ViewProductDetails({ open, product, onClose, onProductUp
     try {
       setSaving(true);
 
+      let updatedProduct = { ...editableProduct };
+
+      if (editableProduct.imageFile) {
+        const newImageUrl = await uploadImage(editableProduct.imageFile);
+        updatedProduct.imageUrl = newImageUrl;
+      }
+
+      const { imageFile, ...productData } = updatedProduct;
+
       await updateProduct(editableProduct.id, {
-        ...editableProduct,
+        ...productData,
         updatedAt: new Date()
       });
 
@@ -151,9 +160,16 @@ export default function ViewProductDetails({ open, product, onClose, onProductUp
                                     placeholder="Stock" />
 
                                 <input value={editableProduct.imageUrl} 
-                                    onChange={e => setEditableProduct(p => ({ ...p, imageUrl: e.target.value }))} 
+                                    onChange={e => setEditableProduct(p => ({ ...p, imageUrl: e.target.value, imageFile: null }))} 
                                     className="input w-full border-1 rounded-lg p-1" 
                                     placeholder="Image URL" />
+
+                                <input
+                                    type="file"
+                                    accept="image/*"
+                                    className="w-full border-1 rounded-lg p-1 cursor-pointer hover:scale-101 transition ease-in-out"
+                                    onChange={(e) => setEditableProduct(p => ({ ...p, imageFile: e.target.files[0], imageUrl: "" }))}
+                                />
 
                             </div>
 
