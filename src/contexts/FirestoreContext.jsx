@@ -183,12 +183,27 @@ export function FirestoreProvider({ children }) {
 
 
     async function getTopProducts(limitCount = 5) {
+        const allReviews = await getAllReviewsGroupedByProduct();
         const snapshot = await getDocs(collection(db, "products"));
         const products = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
-        return products.sort(
-            (a, b) => (b.reviews?.length || 0) - (a.reviews?.length || 0)
-        ).slice(0, limitCount);
+        const productsWithRatings = products.map(product => {
+            const productReviews = allReviews[product.id] || [];
+            const avgRating = productReviews.length > 0 ? productReviews.reduce((sum, r) => sum + r.rating, 0) / productReviews.length : 0;
+
+            return {
+                ...product,
+                reviewCount: productReviews.length,
+                averageRating: avgRating
+            };
+        });
+
+        return productsWithRatings.sort((a, b)=> {
+            if (b.reviewCount !== a.reviewCount) {
+                return b.reviewCount - a.reviewCount
+            }
+            return b.averageRating - a.averageRating;
+        }).slice(0, limitCount);
     }
 
 
