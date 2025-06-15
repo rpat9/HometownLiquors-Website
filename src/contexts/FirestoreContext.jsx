@@ -126,6 +126,12 @@ export function FirestoreProvider({ children }) {
     }
 
 
+    async function getAllUsers() {
+        const snapshot = await getDocs(collection(db, "users"));
+        return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    }
+
+
     async function getAllOrders() {
         const snapshot = await getDocs(collection(db, "orders"));
         return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -226,6 +232,7 @@ export function FirestoreProvider({ children }) {
         addReview,
         getAllReviewsGroupedByProduct,
         getAllProducts,
+        getAllUsers,
         getAllOrders,
         addProduct,
         updateProduct,
