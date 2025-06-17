@@ -15,6 +15,8 @@ import ManageProducts from "./pages/admin/ManageProducts";
 import ViewOrders from "./pages/admin/ViewOrders";
 import Notifications from "./pages/admin/Notifications";
 import Analytics from "./pages/admin/Analytics";
+import Settings from "./pages/admin/Settings";
+import Reports from "./pages/admin/Reports";
 
 function App() {
   return (
@@ -41,6 +43,8 @@ function App() {
             <Route path="orders" element={<ViewOrders />} />
             <Route path="notifications" element={<Notifications />} />
             <Route path="analytics" element={<Analytics />} />
+            <Route path="reports" element={<Reports />} />
+            <Route path="settings" element={<Settings />} />
           </Route>
 
         </Routes>
