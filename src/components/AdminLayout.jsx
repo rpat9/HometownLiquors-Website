@@ -129,23 +129,32 @@ export default function AdminLayout(){
 
               </div>
 
-              <button className="relative p-2 hover:bg-[var(--color-bg)] rounded-lg text-[var(--color-text-secondary)] cursor-pointer">
+              <Link 
+                to="/admin/notifications"
+                className="relative p-2 hover:bg-[var(--color-bg)] rounded-lg text-[var(--color-text-secondary)] cursor-pointer"
+              >
                 <Bell className="w-5 h-5" />
                 <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full animate-pulse"></span>
-              </button>
+              </Link>
 
-              <div className="flex gap-2 cursor-default items-center">
-                  <div className="w-8 h-8 bg-[var(--color-primary)] rounded-full flex items-center justify-center text-white text-sm font-semibold">
-                  {userData?.name.slice(0, 2).toUpperCase() || "A"}
-                  </div>
+              <Link
+                to="/admin/settings"
+                className="hover:bg-[var(--color-bg)] p-1"
+              >
 
-                  <div className="hidden lg:block text-left">
-                    <p className="text-sm font-medium text-[var(--color-text-primary)]">Store Owner</p>
-                    <p className="text-xs text-[var(--color-text-secondary)]">{userData?.name.toUpperCase() || "ADMIN"}</p>
-                  </div>
+                <div className="flex gap-2 items-center cursor-pointer">
+                    <div className="w-8 h-8 bg-[var(--color-primary)] rounded-full flex items-center justify-center text-white text-sm font-semibold">
+                    {userData?.name.slice(0, 2).toUpperCase() || "A"}
+                    </div>
 
-              </div>
+                    <div className="hidden lg:block text-left">
+                      <p className="text-sm font-medium text-[var(--color-text-primary)]">Store Owner</p>
+                      <p className="text-xs text-[var(--color-text-secondary)]">{userData?.name.toUpperCase() || "ADMIN"}</p>
+                    </div>
+                </div>
 
+              </Link>
+              
             </div>
 
           </div>
