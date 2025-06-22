@@ -226,12 +226,12 @@ export function FirestoreProvider({ children }) {
 
 
     async function getStoreSettings() {
-        const settingsSnapshot = getDocs(collection(db, "storeSettings"));
-        if(settingsSnapshot.empty){
-            return null;
+        const snapshot = await getDocs(collection(db, "storeSettings"));
+        if (!snapshot.empty) {
+            const doc = snapshot.docs[0];
+            return { id: doc.id, ...doc.data() };
         }
-        const docSnap = settingsSnapshot.docs[0]
-        return { id: docSnap.id, ...docSnap.data() };
+        return null;
     }
 
     async function updateStoreSettings(id, updatedData){
@@ -267,7 +267,6 @@ export function FirestoreProvider({ children }) {
         getStoreSettings,
         updateStoreSettings
     };
-
 
     return (
         <FirestoreContext.Provider value={value}>
