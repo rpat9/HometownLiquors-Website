@@ -225,6 +225,21 @@ export function FirestoreProvider({ children }) {
     }
 
 
+    async function getStoreSettings() {
+        const settingsSnapshot = getDocs(collection(db, "storeSettings"));
+        if(settingsSnapshot.empty){
+            return null;
+        }
+        const docSnap = settingsSnapshot.docs[0]
+        return { id: docSnap.id, ...docSnap.data() };
+    }
+
+    async function updateStoreSettings(id, updatedData){
+        const settingsRef = doc(db, "storeSettings", id);
+        await updateDoc(settingsRef, updatedData);
+    }
+
+
     const value = {
         createUserProfile,
         updateUserProfile,
@@ -248,7 +263,9 @@ export function FirestoreProvider({ children }) {
         getDashboardStats,
         getRecentOrders,
         getTopProducts,
-        updateOrderStatus
+        updateOrderStatus,
+        getStoreSettings,
+        updateStoreSettings
     };
 
 
