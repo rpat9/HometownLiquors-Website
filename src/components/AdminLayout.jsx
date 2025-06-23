@@ -47,7 +47,7 @@ export default function AdminLayout(){
   return (
     <div className="flex min-h-screen bg-[var(--color-bg)] text-[var(--color-text-primary)]">
       
-      <aside className={`flex flex-col w-64 bg-[var(--card-bg)] shadow-md border-r border-[var(--color-border)] transform transition-transform duration-300 z-50 fixed lg:static ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0 min-h-screen`}>
+      <aside className={`fixed inset-y-0 left-0 z-50 w-64 bg-[var(--card-bg)] shadow-md border-r border-[var(--color-border)] transform transition-transform duration-300 ${sidebarOpen ? 'translate-x-0' :     '-translate-x-full'} lg:translate-x-0`}>
         
         
         <div className="flex items-center justify-between p-6 h-26 border-b border-[var(--color-border)]">
@@ -93,7 +93,7 @@ export default function AdminLayout(){
       </aside>
 
       
-      <div className="flex-1 flex flex-col min-h-screen transition-all duration-300 ">
+      <div className="lg:pl-64 w-[100%] flex flex-col min-h-screen transition-all duration-300">
         
         <header className="sticky top-0 z-40 bg-[var(--card-bg)] border-b border-[var(--color-border)] shadow-sm px-6 py-4 h-26">
 

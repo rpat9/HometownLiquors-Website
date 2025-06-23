@@ -186,7 +186,7 @@ export default function Settings() {
                                 </p>
                             ) : field.type === "number" && field.suffix === "%" ? (
                                 <p className="text-[var(--color-text)] text-base font-medium">
-                                    {((currentValue || 0) * 100).toFixed(1)}%
+                                    {((currentValue || 0) * 100).toFixed(2)}%
                                 </p>
                             ) : (
                                 <p className="text-[var(--color-text)] text-base font-medium">
