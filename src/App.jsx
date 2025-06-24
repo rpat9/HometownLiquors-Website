@@ -17,6 +17,7 @@ import Notifications from "./pages/admin/Notifications";
 import Analytics from "./pages/admin/Analytics";
 import Settings from "./pages/admin/Settings";
 import Reports from "./pages/admin/Reports";
+import Checkout from "./pages/Checkout";
 
 function App() {
   return (
@@ -34,6 +35,7 @@ function App() {
             <Route path="/products/:id" element={<ProductDetail />} />
             <Route path="/cart" element={<PrivateRoute><Cart /></PrivateRoute>} />
             <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
+            <Route path="/checkout" element={<PrivateRoute><Checkout /></PrivateRoute>} />
           </Route>
 
           
