@@ -1,4 +1,5 @@
 import { useCart } from "../contexts/CartContext";
+import { Link } from "react-router-dom";
 
 export default function Cart() {
 
@@ -72,9 +73,11 @@ export default function Cart() {
 
                     </div>
 
-                    <button className="btn-primary btn-hover w-full mt-4" disabled>
-
-                        Proceed to Checkout (Coming Soon)
+                    <button className="btn-primary btn-hover">
+                        <Link to="/checkout" className="w-full mt-4">
+                            Proceed to Checkout
+                        </Link>
+                        
                     </button>
 
                 </div>
