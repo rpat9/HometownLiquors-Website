@@ -35,7 +35,7 @@ export default function Dashboard() {
         };
     
         fetchOrders();
-    }, [userData]);
+    }, [userData?.orderHistory]);
 
 
     useEffect(() => {
@@ -171,8 +171,13 @@ export default function Dashboard() {
                                 <p className="font-semibold">Order ID: {order.id}</p>
                                 <p>Status: {order.orderStatus}</p>
                                 <p>Total: ${order.orderTotal.toFixed(2)}</p>
-                                <p>Pickup Time: {order.pickupInstructions}</p>
-                                <p className="text-sm text-gray-400">{new Date(order.createdAt?.seconds * 1000).toLocaleString()}</p>
+                                <p>
+                                    Pickup Time: { new Date(order.pickupTime).toLocaleTimeString([], {
+                                        hour: "numeric",
+                                        minute: "2-digit",
+                                        hour12: true
+                                    })}
+                                </p>
                             </div>
 
                         ))}
