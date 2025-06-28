@@ -161,9 +161,7 @@ export default function Dashboard() {
 
                 ) : (
                     <div className="space-y-4">
-
                         {orders.map((order) => (
-
                             <div
                                 key={order.id}
                                 className="border border-[var(--color-border)] p-4 rounded-xl bg-[var(--card-bg)]"
@@ -171,17 +169,49 @@ export default function Dashboard() {
                                 <p className="font-semibold">Order ID: {order.id}</p>
                                 <p>Status: {order.orderStatus}</p>
                                 <p>Total: ${order.orderTotal.toFixed(2)}</p>
-                                <p>
-                                    Pickup Time: { new Date(order.pickupTime).toLocaleTimeString([], {
-                                        hour: "numeric",
-                                        minute: "2-digit",
-                                        hour12: true
-                                    })}
-                                </p>
+                                {order.orderStatus === 'Completed' ? (
+                                    <p>
+                                        Picked up on {
+                                            order.readableCreatedAt
+                                                ? (() => {
+                                                    const parts = order.readableCreatedAt.split(', ');
+                                                    if (parts.length === 4) {
+                                                        return `${parts[1]} ${parts[2]} at ${parts[3]}`;
+                                                    }
+                                                    return order.readableCreatedAt;
+                                                })()
+                                                : "Unknown"
+                                        }
+                                    </p>
+                                ) : order.orderStatus === 'Cancelled' ? (
+                                    <p>
+                                        Cancelled on {
+                                            order.readableCreatedAt
+                                                ? (() => {
+                                                    const parts = order.readableCreatedAt.split(', ');
+                                                    if (parts.length === 4) {
+                                                        return `${parts[1]} ${parts[2]} at ${parts[3]}`;
+                                                    }
+                                                    return order.readableCreatedAt;
+                                                })()
+                                                : "Unknown"
+                                        }
+                                    </p>
+                                ) : (
+                                    <p>
+                                        Pickup Time: {order.pickupTime
+                                            ? new Date(order.pickupTime).toLocaleString([], {
+                                                month: "short",
+                                                day: "numeric",
+                                                hour: "numeric",
+                                                minute: "2-digit",
+                                                hour12: true,
+                                            })
+                                            : "N/A"}
+                                    </p>
+                                )}
                             </div>
-
                         ))}
-
                     </div>
                 )}
 
