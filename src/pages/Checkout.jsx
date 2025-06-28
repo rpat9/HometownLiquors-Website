@@ -8,7 +8,7 @@ import { toast } from "react-hot-toast";
 export default function Checkout() {
     const MAX_ITEMS_ALLOWED = 7;
     const { cartItems, clearCart } = useCart();
-    const { currentUser } = useAuth();
+    const { currentUser, setUserData } = useAuth();
     const { createOrder, getUserProfile, getStoreSettings, updateUserProfile } = useFirestore();
     const navigate = useNavigate();
 
@@ -147,9 +147,12 @@ export default function Checkout() {
 
             const orderId = await createOrder(order);
 
-            await updateUserProfile(currentUser.uid, {
-                orderHistory: [...(userProfile?.orderHistory || []), orderId],
-            });
+            const latestProfile = await getUserProfile(currentUser.uid);
+            const newOrderHistory = [...(latestProfile?.orderHistory || []), orderId];
+            await updateUserProfile(currentUser.uid, { orderHistory: newOrderHistory });
+
+            const updatedProfile = await getUserProfile(currentUser.uid);
+            setUserData && setUserData(updatedProfile);
 
             clearCart();
             toast.success("Order placed successfully!");
