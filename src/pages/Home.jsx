@@ -1,163 +1,346 @@
+import { ShoppingBag, Wine, Truck, Clock, Star, MapPin, Phone, Mail, Award, Users, Calendar } from "lucide-react";
 import { Link } from "react-router-dom";
-import { motion } from "framer-motion";
-import { ShoppingBag, Wine, Truck, Clock } from "lucide-react";
+import { useAuth } from "../contexts/AuthContext";
 
 export default function Home() {
+
+  const { currentUser } = useAuth();
+
   return (
     <div className="text-[var(--color-text-primary)] bg-[var(--color-bg)]">
+      
+      <section className="relative bg-gradient-to-br from-red-700 to-red-900 py-24 px-6 text-center overflow-hidden">
 
-      <section className="bg-[var(--card-bg)] py-20 px-6 text-center">
-        <motion.div
-          initial={{ opacity: 0, y: 40 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7 }}
-        >
-          <h1 className="text-4xl font-bold mb-4">Welcome to Hometown Liquors</h1>
+        <div className="absolute inset-0 bg-black/20"></div>
 
-          <p className="text-lg mb-6 text-[var(--color-muted)]">
-            Braceville's trusted spot for wine, beer, and spirits.
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute top-20 left-10 w-32 h-32 bg-white rounded-full blur-3xl"></div>
+          <div className="absolute bottom-20 right-10 w-48 h-48 bg-white rounded-full blur-3xl"></div>
+        </div>
+        
+        <div className="relative z-10 max-w-4xl mx-auto">
+
+          <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm rounded-full px-4 py-2 text-white text-sm mb-6">
+            <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+            <span>Braceville's #1 Rated Liquor Store</span>
+          </div>
+          
+          <h1 className="text-5xl md:text-6xl font-bold mb-6 text-white">
+            Welcome to
+            <span className="block bg-gradient-to-r from-yellow-300 to-orange-300 bg-clip-text text-transparent">
+              Hometown Liquors
+            </span>
+
+          </h1>
+
+          <p className="text-xl mb-8 text-white/90 max-w-2xl mx-auto">
+            Your trusted neighborhood destination for premium wines, craft beers, and fine spirits. 
+            <span className="block mt-2 font-semibold">Serving Braceville with pride since day one.</span>
           </p>
 
-          <Link
-            to="/products"
-            className="btn-primary btn-hover px-6 py-3 text-lg rounded-lg inline-block"
-          >
-            Browse Products
-          </Link>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Link
+              to="/products"
+              className="px-8 py-4 text-lg rounded-full bg-white text-red-700 font-semibold shadow-lg hover:bg-gray-50 hover:scale-105 transition-all duration-300 cursor-pointer"
+            >
+              Browse Our Selection
+            </Link>
+            <a
+              href="https://maps.google.com/?q=103+Illinois+53,+Braceville,+IL"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="px-8 py-4 text-lg rounded-full border-2 border-white text-white hover:bg-white hover:text-red-700 transition-all duration-300 text-center cursor-pointer"
+            >
+              Get Directions
+            </a>
+          </div>
 
-        </motion.div>
+        </div>
+
       </section>
 
-      <section className="py-16 px-6 max-w-6xl mx-auto text-center">
-        <motion.h2
-          className="text-3xl font-bold mb-10"
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          transition={{ duration: 0.5 }}
-        >
-          What We Offer
-        </motion.h2>
+      <section className="py-12 px-6 bg-[var(--card-bg)] border-b border-[var(--color-border)]">
+        <div className="max-w-6xl mx-auto">
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
+            {[
+              { icon: <Award className="w-12 h-12" />, number: "1st", label: "Year Serving Braceville" },
+              { icon: <Users className="w-12 h-12" />, number: "400+", label: "Happy Customers" },
+              { icon: <Star className="w-12 h-12" />, number: "4.5", label: "Initial Rating" },
+            ].map((item, index) => (
+              <div key={item.label} className="flex flex-col items-center cursor-default">
+
+                <div className="mb-3 text-[var(--color-primary)] flex items-center justify-center">
+                  {item.icon}
+                </div>
+
+                <div className="text-3xl font-bold text-[var(--color-primary)] mb-1">
+                  {item.number}
+                </div>
+
+                <div className="text-[var(--color-text-primary)] font-medium">
+                  {item.label}
+                </div>
+
+              </div>
+            ))}
+          </div>
+
+        </div>
+
+      </section>
+
+      <section className="py-20 px-6 max-w-6xl mx-auto">
+
+        <div className="text-center mb-16">
+          <h2 className="text-4xl font-bold mb-4">Premium Selection & Service</h2>
+          <p className="text-lg text-[var(--color-text-primary)] max-w-2xl mx-auto">
+            From everyday favorites to special occasion bottles, we curate the finest selection for our community.
+          </p>
+        </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
           {[
-            { icon: <Wine />, label: "Fine Wines" },
-            { icon: <ShoppingBag />, label: "Premium Spirits" },
-            { icon: <Truck />, label: "Easy Pickup" },
-            { icon: <Clock />, label: "Extended Hours" },
+            { 
+              icon: <Wine className="w-16 h-16" />, 
+              label: "Fine Wines", 
+              description: "Curated selection from local vineyards to international classics"
+            },
+            { 
+              icon: <ShoppingBag className="w-16 h-16" />, 
+              label: "Premium Spirits", 
+              description: "Top-shelf whiskeys, vodkas, and artisanal liqueurs"
+            },
+            { 
+              icon: <Truck className="w-16 h-16" />, 
+              label: "Easy Pickup", 
+              description: "Order online, pick up in-store with dedicated parking"
+            },
+            { 
+              icon: <Clock className="w-16 h-16" />, 
+              label: "Extended Hours", 
+              description: "Open 7 days a week with convenient evening hours"
+            },
           ].map((item, index) => (
-            <motion.div
+
+            <div
               key={item.label}
-              className="p-6 rounded-xl bg-[var(--card-bg)] border border-[var(--color-border)] shadow-sm"
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.1 }}
+              className="group p-8 rounded-2xl bg-[var(--card-bg)] border border-[var(--color-border)] shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1 cursor-default"
             >
-              <div className="w-12 h-12 mx-auto mb-4 text-[var(--color-primary)]">
+              <div className="mx-auto mb-6 text-[var(--color-primary)] group-hover:scale-110 transition-transform duration-300 flex items-center justify-center">
                 {item.icon}
               </div>
 
-              <p className="font-semibold">{item.label}</p>
+              <h3 className="font-bold text-lg mb-3 text-center">{item.label}</h3>
+              <p className="text-[var(--color-text-primary)] text-sm leading-relaxed text-center">
+                {item.description}
+              </p>
 
-            </motion.div>
+            </div>
           ))}
 
         </div>
       </section>
 
-      <section className="py-16 px-6 bg-[var(--card-bg)]">
-        <div className="max-w-4xl mx-auto text-center">
-          <motion.h2
-            className="text-3xl font-bold mb-10"
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            transition={{ duration: 0.5 }}
-          >
-            How It Works
-          </motion.h2>
-          <div className="space-y-8 text-left">
+      <section className="py-20 px-6 bg-[var(--card-bg)]">
+        <div className="max-w-5xl mx-auto">
+
+          <div className="text-center mb-16">
+            <h2 className="text-4xl font-bold mb-4">Simple & Convenient</h2>
+            <p className="text-lg text-[var(--color-text-primary)]">
+              Skip the browsing and get exactly what you want with our streamlined process.
+            </p>
+          </div>
+
+          <div className="space-y-12">
             {[
               {
                 step: 1,
-                text: "Scan the QR code in-store to browse live inventory.",
+                title: "Scan & Browse",
+                text: "Use the QR code in-store to access our live inventory and browse available products on your phone.",
+                icon: <Phone className="w-6 h-6" />
               },
               {
                 step: 2,
-                text: "Place your order and select a pickup time.",
+                title: "Order & Schedule",
+                text: "Add items to your cart and select a convenient pickup time that works with your schedule.",
+                icon: <Calendar className="w-6 h-6" />
               },
               {
                 step: 3,
-                text: "Show your ID at pickup to receive your items.",
+                title: "Show ID & Collect",
+                text: "Present your valid ID at pickup and collect your order from our dedicated pickup area.",
+                icon: <Award className="w-6 h-6" />
               },
-            ].map(({ step, text }, i) => (
-              <motion.div
+            ].map(({ step, title, text, icon }, i) => (
+
+              <div
                 key={step}
-                className="flex items-start gap-4"
-                initial={{ opacity: 0, x: -20 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                transition={{ delay: i * 0.15 }}
+                className="flex items-start gap-6 p-6 rounded-xl bg-[var(--color-bg)] border border-[var(--color-border)] cursor-default"
               >
-                <div className="w-10 h-10 rounded-full bg-[var(--color-primary)] text-white font-bold flex items-center justify-center text-lg">
+                <div className="flex-shrink-0 w-16 h-16 rounded-full bg-[var(--color-primary)] text-white font-bold flex items-center justify-center text-xl shadow-lg">
                   {step}
                 </div>
-                <p className="text-lg">{text}</p>
-              </motion.div>
+
+                <div className="flex-1">
+
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="text-[var(--color-primary)] flex items-center justify-center">{icon}</div>
+                    <h3 className="text-xl font-bold">{title}</h3>
+                  </div>
+
+                  <p className="text-[var(--color-text-primary)] leading-relaxed">{text}</p>
+                </div>
+
+              </div>
             ))}
           </div>
 
         </div>
       </section>
 
-      <section className="py-16 px-6 max-w-4xl mx-auto text-center">
-        <motion.h2
-          className="text-3xl font-bold mb-6"
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          transition={{ duration: 0.5 }}
-        >
-          Locally Owned & Community Trusted
-        </motion.h2>
+      <section className="py-20 px-6 max-w-5xl mx-auto">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+          <div>
+            <h2 className="text-4xl font-bold mb-6">
+              Locally Owned & Community Trusted
+            </h2>
+            <p className="text-lg text-[var(--color-text-primary)] mb-6 leading-relaxed">
+              At Hometown Liquors, we're more than just a store – we're your neighbors. 
+              Our carefully curated selection, knowledgeable owners, and commitment to 
+              exceptional service have made us Braceville's go-to destination for all 
+              your beverage needs.
+            </p>
+            <p className="text-lg text-[var(--color-text-primary)] leading-relaxed">
+              Whether you're celebrating a special occasion, hosting friends, or simply 
+              unwinding after a long day, we're here to help you find the perfect bottle.
+            </p>
+          </div>
+          
+          <div className="grid grid-cols-2 gap-4">
 
-        <motion.p
-          className="text-lg text-[var(--color-muted)]"
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          transition={{ delay: 0.2 }}
-        >
-          At Hometown Liquors, we pride ourselves on curated selections,
-          friendly service, and a smooth in-store pickup experience. Whether
-          you're celebrating, gifting, or relaxing — we’ve got the right bottle.
-        </motion.p>
+            <div className="bg-[var(--card-bg)] p-6 rounded-xl border border-[var(--color-border)] text-center cursor-default">
+              <div className="text-2xl font-bold text-[var(--color-primary)] mb-2">500+</div>
+              <div className="text-sm text-[var(--color-text-primary)]">Wine Varieties</div>
+            </div>
 
+            <div className="bg-[var(--card-bg)] p-6 rounded-xl border border-[var(--color-border)] text-center cursor-default">
+              <div className="text-2xl font-bold text-[var(--color-primary)] mb-2">100+</div>
+              <div className="text-sm text-[var(--color-text-primary)]">Craft Beers</div>
+            </div>
+
+            <div className="bg-[var(--card-bg)] p-6 rounded-xl border border-[var(--color-border)] text-center cursor-default">
+              <div className="text-2xl font-bold text-[var(--color-primary)] mb-2">200+</div>
+              <div className="text-sm text-[var(--color-text-primary)]">Premium Spirits</div>
+            </div>
+
+            <div className="bg-[var(--card-bg)] p-6 rounded-xl border border-[var(--color-border)] text-center cursor-default">
+              <div className="text-2xl font-bold text-[var(--color-primary)] mb-2">A+</div>
+              <div className="text-sm text-[var(--color-text-primary)]">Customer Service</div>
+            </div>
+
+          </div>
+
+        </div>
       </section>
+      
+      <footer className="bg-[var(--card-bg)] text-[var(--color-text-secondary)] py-12 px-6 border-t border-[var(--color-border)]">
+        <div className="max-w-6xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
 
-      <footer className="bg-[var(--color-footer-bg)] text-[var(--color-text-secondary)] py-10 px-6 border-t border-[var(--color-border)]">
+            <div>
+              <h3 className="font-bold mb-4 text-[var(--color-primary)] text-lg">Contact Info</h3>
 
-        <div className="max-w-6xl mx-auto grid grid-cols-1 sm:grid-cols-3 gap-8 text-sm">
-          <div>
-            <h3 className="font-semibold mb-2 text-[var(--color-text-primary)]">Contact</h3>
-            <p className="text-[var(--color-text-primary)]">103 Illinois 53, Illinois, USA</p>
-            <p className="text-[var(--color-text-primary)]">contact@hometownliquors.com</p>
-            <p className="text-[var(--color-text-primary)]">(224) 600-9754</p>
+              <div className="space-y-3 text-[var(--color-text-primary)]">
+                <div className="flex items-center gap-3">
+                  <MapPin className="w-4 h-4 text-[var(--color-primary)]" />
+                  <p className="text-sm">103 Illinois 53, Braceville, IL</p>
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <Phone className="w-4 h-4 text-[var(--color-primary)]" />
+                  <p className="text-sm">(224) 600-9754</p>
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <Mail className="w-4 h-4 text-[var(--color-primary)]" />
+                  <p className="text-sm">hometown53route@gmail.com</p>
+                </div>
+
+              </div>
+
+            </div>
+
+            <div>
+              <h3 className="font-bold mb-4 text-[var(--color-primary)] text-lg">Store Hours</h3>
+              <div className="space-y-2 text-sm text-[var(--color-text-primary)]">
+                <p>Monday - Thursday: 8am - 9pm</p>
+                <p>Friday - Saturday: 8am - 9:30pm</p>
+                <p>Sunday: 8am - 6pm</p>
+              </div>
+            </div>
+
+            <div>
+              <h3 className="font-bold mb-4 text-[var(--color-primary)] text-lg">Quick Links</h3>
+              <div className="space-y-2 text-sm">
+                <Link 
+                  to="/products"
+                  className="block text-[var(--color-text-primary)] hover:text-[var(--color-primary)] transition-colors text-left cursor-pointer"
+                >
+                  Shop Products
+                </Link>
+
+                <Link 
+                  to="/dashboard"
+                  className="block text-[var(--color-text-primary)] hover:text-[var(--color-primary)] transition-colors text-left cursor-pointer"
+                >
+                  Dashboard
+                </Link>
+
+                {currentUser ? (
+                  <Link 
+                  to="/dashboard"
+                  className="block text-[var(--color-text-primary)] hover:text-[var(--color-primary)] transition-colors text-left cursor-pointer"
+                  >
+                    Your Cart
+                  </Link>
+                ) : (
+                  <Link 
+                  to="/login"
+                  className="block text-[var(--color-text-primary)] hover:text-[var(--color-primary)] transition-colors text-left cursor-pointer"
+                  >
+                    Account Login
+                  </Link>
+                )}
+
+              </div>
+            </div>
+
+            <div>
+
+              <h3 className="font-bold mb-4 text-[var(--color-primary)] text-lg">About</h3>
+              <p className="text-sm leading-relaxed text-[var(--color-text-primary)]">
+                Proudly serving Braceville and surrounding communities with premium 
+                beverages and exceptional service since our founding.
+              </p>
+
+            </div>
+
           </div>
 
-          <div>
-            <h3 className="font-semibold mb-2 text-[var(--color-text-primary)]">Hours</h3>
-            <p className="text-[var(--color-text-primary)]">Mon–Sat: 8am – 9pm</p>
-            <p className="text-[var(--color-text-primary)]">Sun: 8am - 6pm</p>
-          </div>
+          <div className="border-t border-[var(--color-border)] pt-8 text-center">
 
-          <div>
-            <h3 className="font-semibold mb-2 text-[var(--color-text-primary)]">Quick Links</h3>
-            <Link to="/login" className="text-[var(--color-text-primary)] block hover:underline">Login</Link>
-            <Link to="/products" className="text-[var(--color-text-primary)] block hover:underline">Shop</Link>
-            <Link to="/dashboard" className="text-[var(--color-text-primary)] block hover:underline">Dashboard</Link>
+            <p className="text-sm text-[var(--color-text-primary)]">
+              © {new Date().getFullYear()} Hometown Liquors. All rights reserved. | 
+              <span className="ml-2">Drink Responsibly. Must be 21+</span>
+            </p>
+
           </div>
 
         </div>
 
-        <p className="text-center mt-10 text-xs text-[var(--color-text-primary)]">© {new Date().getFullYear()} Hometown Liquors. All rights reserved.</p>
       </footer>
-
     </div>
-  );
+  )
+  
 }
