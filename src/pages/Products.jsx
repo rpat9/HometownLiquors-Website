@@ -145,7 +145,7 @@ export default function Products() {
                                 ) : (
                                 <p className="text-sm text-gray-500 mb-1">No reviews yet</p>
                             )}
-
+                            <p className="text-sm text-gray-500 mb-1">Actual Product May Differ</p>
                             <button
                                 onClick={() => {
                                     addToCart(product);
