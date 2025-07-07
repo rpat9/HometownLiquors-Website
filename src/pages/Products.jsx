@@ -1,34 +1,64 @@
-import { useEffect, useState, useMemo } from "react";
-import { collection, getDocs, query, limit, orderBy, startAfter, getCountFromServer } from "firebase/firestore";
+import { useEffect, useState, useMemo, useCallback, useRef } from "react";
+import { collection, getDocs, query, limit, orderBy, getCountFromServer } from "firebase/firestore";
 import { db } from "../services/firebase";
 import { useCart } from "../contexts/CartContext";
 import { useFirestore } from "../contexts/FirestoreContext";
 import { useAuth } from "../contexts/AuthContext";
+import { searchProducts } from "../services/algolia";
 import { toast } from "react-hot-toast";
 import { Link } from "react-router-dom";
-import { Heart, ShoppingCart, Star, ChevronLeft, ChevronRight } from "lucide-react";
+import { Heart, ShoppingCart, Star, ChevronLeft, ChevronRight, Search, X } from "lucide-react";
 
 export default function Products() {
     const [products, setProducts] = useState([]);
+    const [searchTerm, setSearchTerm] = useState("");
+    const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
+    const [searching, setSearching] = useState(false);
     const [loading, setLoading] = useState(true);
     const [ratingsMap, setRatingsMap] = useState({});
     const [currentPage, setCurrentPage] = useState(1);
     const [totalProducts, setTotalProducts] = useState(0);
-    const [lastVisible, setLastVisible] = useState(null);
-    const [firstVisible, setFirstVisible] = useState(null);
     const [pageCache, setPageCache] = useState({});
     const [loadingPage, setLoadingPage] = useState(false);
+    const [searchResults, setSearchResults] = useState([]);
+    const [isSearchMode, setIsSearchMode] = useState(false);
 
-    const PRODUCTS_PER_PAGE = 25; // You can make this configurable
+    const PRODUCTS_PER_PAGE = 24;
+    const searchTimeoutRef = useRef(null);
 
     const { currentUser, userData, setUserData } = useAuth();
     const { toggleFavorite, getUserProfile, getAllReviewsGroupedByProduct } = useFirestore();
     const { addToCart } = useCart();
 
-    // Calculate total pages
     const totalPages = Math.ceil(totalProducts / PRODUCTS_PER_PAGE);
+    const favoriteSet = useMemo(() => new Set(userData?.favorites || []), [userData]);
 
-    // Get total product count
+    // Debounce search term
+    useEffect(() => {
+        if (searchTimeoutRef.current) {
+            clearTimeout(searchTimeoutRef.current);
+        }
+
+        searchTimeoutRef.current = setTimeout(() => {
+            setDebouncedSearchTerm(searchTerm);
+        }, 300); // 300ms delay
+
+        return () => {
+            if (searchTimeoutRef.current) {
+                clearTimeout(searchTimeoutRef.current);
+            }
+        };
+    }, [searchTerm]);
+
+    // Handle search when debounced term changes
+    useEffect(() => {
+        if (debouncedSearchTerm.trim()) {
+            handleSearch(debouncedSearchTerm);
+        } else if (isSearchMode) {
+            clearSearch();
+        }
+    }, [debouncedSearchTerm]);
+
     useEffect(() => {
         const getTotalCount = async () => {
             try {
@@ -42,73 +72,30 @@ export default function Products() {
         getTotalCount();
     }, []);
 
-    // Fetch products for current page
     useEffect(() => {
         const fetchProducts = async () => {
-            setLoadingPage(true);
+            if (isSearchMode) return;
 
+            setLoadingPage(true);
             try {
-                // Check if page is already cached
                 if (pageCache[currentPage]) {
-                    setProducts(pageCache[currentPage].products);
-                    setLastVisible(pageCache[currentPage].lastVisible);
-                    setFirstVisible(pageCache[currentPage].firstVisible);
-                    setLoadingPage(false);
+                    setProducts(pageCache[currentPage]);
                     return;
                 }
 
-                let productQuery;
-
-                if (currentPage === 1) {
-                    // First page
-                    productQuery = query(
-                        collection(db, "products"),
-                        orderBy("name"),
-                        limit(PRODUCTS_PER_PAGE)
-                    );
-                } else {
-                    // Subsequent pages - we need to rebuild the query from page 1
-                    // This is a limitation of Firestore pagination
-                    const skipCount = (currentPage - 1) * PRODUCTS_PER_PAGE;
-                    productQuery = query(
-                        collection(db, "products"),
-                        orderBy("name"),
-                        limit(skipCount + PRODUCTS_PER_PAGE)
-                    );
-                }
+                const productQuery = query(
+                    collection(db, "products"),
+                    orderBy("name"),
+                    limit(currentPage * PRODUCTS_PER_PAGE)
+                );
 
                 const snapshot = await getDocs(productQuery);
-                const allDocs = snapshot.docs;
-
-                // Get only the products for current page
-                const startIndex = (currentPage - 1) * PRODUCTS_PER_PAGE;
-                const endIndex = startIndex + PRODUCTS_PER_PAGE;
-                const currentPageDocs = allDocs.slice(startIndex, endIndex);
-
-                const productList = currentPageDocs.map((doc) => ({ 
-                    id: doc.id, 
-                    ...doc.data() 
-                }));
+                const docs = snapshot.docs.slice((currentPage - 1) * PRODUCTS_PER_PAGE, currentPage * PRODUCTS_PER_PAGE);
+                const productList = docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
                 setProducts(productList);
+                setPageCache(prev => ({ ...prev, [currentPage]: productList }));
 
-                // Set pagination markers
-                if (currentPageDocs.length > 0) {
-                    setFirstVisible(currentPageDocs[0]);
-                    setLastVisible(currentPageDocs[currentPageDocs.length - 1]);
-                }
-
-                // Cache the page
-                setPageCache(prev => ({
-                    ...prev,
-                    [currentPage]: {
-                        products: productList,
-                        lastVisible: currentPageDocs[currentPageDocs.length - 1],
-                        firstVisible: currentPageDocs[0]
-                    }
-                }));
-
-                // Load ratings for current page products only
                 const allReviews = await getAllReviewsGroupedByProduct();
                 const avgMap = {};
 
@@ -132,143 +119,230 @@ export default function Products() {
         };
 
         fetchProducts();
-    }, [currentPage]);
+    }, [currentPage, isSearchMode]);
 
-    const favoriteSet = useMemo(() => new Set(userData?.favorites || []), [userData]);
+    const handleSearch = async (value) => {
+        if (!value.trim()) return;
 
-    const handleToggleFavorite = async (productId) => {
-        if (!currentUser) {
-            toast.error("Please log in to favorite items.");
-            return;
-        }
-
-        const isFavorited = userData.favorites.includes(productId);
+        setSearching(true);
+        setIsSearchMode(true);
         
         try {
+            const hits = await searchProducts(value);
+            setSearchResults(hits);
+            setProducts(hits);
+        } catch (err) {
+            console.error("Algolia search failed:", err);
+            toast.error("Search failed. Try again.");
+        } finally {
+            setSearching(false);
+        }
+    };
+
+    const clearSearch = () => {
+        setSearchTerm("");
+        setDebouncedSearchTerm("");
+        setIsSearchMode(false);
+        setSearchResults([]);
+        setCurrentPage(1);
+    };
+
+    const handleSearchInputChange = (e) => {
+        const value = e.target.value;
+        setSearchTerm(value);
+        
+        if (value.trim() && !searching) {
+            setSearching(true);
+        }
+    };
+
+    const handleToggleFavorite = async (productId) => {
+        if (!currentUser) return toast.error("Please log in to favorite items.");
+        const isFavorited = userData?.favorites.includes(productId);
+
+        try {
             await toggleFavorite(currentUser.uid, productId, isFavorited);
-            const updatedUserData = await getUserProfile(currentUser.uid);
-            setUserData(updatedUserData);
+            const updated = await getUserProfile(currentUser.uid);
+            setUserData(updated);
             toast.success(isFavorited ? "Removed from favorites" : "Added to favorites");
         } catch (err) {
-            console.error("Error toggling favorite:", err);
-            toast.error("Failed to toggle favorite");
+            console.error(err);
+            toast.error("Failed to update favorites");
         }
     };
 
     const handlePageChange = (newPage) => {
-        if (newPage >= 1 && newPage <= totalPages && newPage !== currentPage) {
+        if (!isSearchMode && newPage >= 1 && newPage <= totalPages && newPage !== currentPage) {
             setCurrentPage(newPage);
-            // Scroll to top when changing pages
-            window.scrollTo({ top: 0, behavior: 'smooth' });
+            window.scrollTo({ top: 0, behavior: "smooth" });
         }
     };
 
-    const PaginationControls = () => (
-        <div className="flex items-center justify-center space-x-2 mt-8">
-            <button
-                onClick={() => handlePageChange(currentPage - 1)}
-                disabled={currentPage === 1}
-                className={`flex items-center px-3 py-2 rounded-md text-sm font-medium ${
-                    currentPage === 1
-                        ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                        : 'bg-[var(--color-primary)] text-white hover:bg-[var(--btn-hover-color)] transition-colors cursor-pointer'
-                }`}
-            >
-                <ChevronLeft size={16} className="mr-1" />
-                Previous
-            </button>
+    const PaginationControls = () =>
+        !isSearchMode && totalPages > 1 && (
+            <div className="flex items-center justify-center space-x-2 mt-8">
+                <button
+                    onClick={() => handlePageChange(currentPage - 1)}
+                    disabled={currentPage === 1}
+                    className={`flex items-center px-3 py-2 rounded-md text-sm font-medium ${
+                        currentPage === 1
+                            ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                            : 'bg-[var(--color-primary)] text-white hover:bg-[var(--btn-hover-color)] transition-colors cursor-pointer'
+                    }`}
+                >
+                    <ChevronLeft size={16} className="mr-1" />
+                    Previous
+                </button>
 
-            <div className="flex items-center space-x-1">
-                {/* Show page numbers */}
-                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                    let pageNum;
-                    if (totalPages <= 5) {
-                        pageNum = i + 1;
-                    } else if (currentPage <= 3) {
-                        pageNum = i + 1;
-                    } else if (currentPage >= totalPages - 2) {
-                        pageNum = totalPages - 4 + i;
-                    } else {
-                        pageNum = currentPage - 2 + i;
-                    }
+                <div className="flex items-center space-x-1">
+                    {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                        let pageNum;
+                        if (totalPages <= 5) {
+                            pageNum = i + 1;
+                        } else if (currentPage <= 3) {
+                            pageNum = i + 1;
+                        } else if (currentPage >= totalPages - 2) {
+                            pageNum = totalPages - 4 + i;
+                        } else {
+                            pageNum = currentPage - 2 + i;
+                        }
 
-                    return (
-                        <button
-                            key={pageNum}
-                            onClick={() => handlePageChange(pageNum)}
-                            className={`px-3 py-2 rounded-md text-sm font-medium ${
-                                pageNum === currentPage
-                                    ? 'bg-[var(--color-primary)] text-white'
-                                    : 'bg-gray-300 text-gray-700 hover:bg-gray-300 transition-colors cursor-pointer'
-                            }`}
-                        >
-                            {pageNum}
-                        </button>
-                    );
-                })}
+                        return (
+                            <button
+                                key={pageNum}
+                                onClick={() => handlePageChange(pageNum)}
+                                className={`px-3 py-2 rounded-md text-sm font-medium ${
+                                    pageNum === currentPage
+                                        ? 'bg-[var(--color-primary)] text-white'
+                                        : 'bg-gray-300 text-gray-700 hover:bg-gray-300'
+                                }`}
+                            >
+                                {pageNum}
+                            </button>
+                        );
+                    })}
+                </div>
+
+                <button
+                    onClick={() => handlePageChange(currentPage + 1)}
+                    disabled={currentPage === totalPages}
+                    className={`flex items-center px-3 py-2 rounded-md text-sm font-medium ${
+                        currentPage === totalPages
+                            ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                            : 'bg-[var(--color-primary)] text-white hover:bg-[var(--btn-hover-color)] transition-colors cursor-pointer'
+                    }`}
+                >
+                    Next
+                    <ChevronRight size={16} className="ml-1" />
+                </button>
             </div>
+        );
 
-            <button
-                onClick={() => handlePageChange(currentPage + 1)}
-                disabled={currentPage === totalPages}
-                className={`flex items-center px-3 py-2 rounded-md text-sm font-medium ${
-                    currentPage === totalPages
-                        ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                        : 'bg-[var(--color-primary)] text-white hover:bg-[var(--btn-hover-color)] transition-colors cursor-pointer'
-                }`}
-            >
-                Next
-                <ChevronRight size={16} className="ml-1" />
-            </button>
-        </div>
+    const SearchHeader = () => (
+        isSearchMode && (
+            <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                <div className="flex items-center justify-between">
+                    <div>
+                        <h3 className="text-lg font-semibold text-blue-900">
+                            Search Results for "{debouncedSearchTerm}"
+                        </h3>
+                        <p className="text-sm text-blue-700">
+                            {searchResults.length} product{searchResults.length !== 1 ? 's' : ''} found
+                        </p>
+                    </div>
+                    <button
+                        onClick={clearSearch}
+                        className="flex items-center px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-sm"
+                    >
+                        <X size={16} className="mr-1" />
+                        Clear Search
+                    </button>
+                </div>
+            </div>
+        )
     );
 
     return (
         <div className="max-w-7xl mx-auto px-6 lg:px-8 py-10 text-[var(--color-text-primary)]">
-            <div className="flex justify-between items-center mb-6">
+            <div className="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
                 <h1 className="text-3xl font-bold">Our Products</h1>
-                <div className="text-sm text-gray-500">
-                    Showing {((currentPage - 1) * PRODUCTS_PER_PAGE) + 1}-{Math.min(currentPage * PRODUCTS_PER_PAGE, totalProducts)} of {totalProducts} products
+
+                <div className="relative w-full sm:w-80">
+                    <Search className="absolute top-2.5 left-3 text-gray-400" size={18} />
+                    <input
+                        type="text"
+                        placeholder="Search products..."
+                        value={searchTerm}
+                        onChange={handleSearchInputChange}
+                        className="pl-10 pr-12 py-2 rounded-lg w-full border border-gray-300 bg-white text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent transition-all"
+                    />
+                    {searchTerm && (
+                        <button
+                            onClick={clearSearch}
+                            className="absolute top-2.5 right-3 text-gray-400 hover:text-gray-600 transition-colors"
+                        >
+                            <X size={18} />
+                        </button>
+                    )}
+                    {searching && (
+                        <div className="absolute top-2.5 right-10">
+                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-[var(--color-primary)]"></div>
+                        </div>
+                    )}
                 </div>
             </div>
 
+            <SearchHeader />
+
             {loading ? (
                 <div className="flex justify-center items-center py-12">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--color-primary)]"></div>
+                    <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[var(--color-primary)]"></div>
                 </div>
-            ) : totalProducts === 0 ? (
+            ) : products.length === 0 ? (
                 <div className="text-center py-12">
-                    <p className="text-lg text-gray-500">No products available yet.</p>
+                    <p className="text-lg text-gray-500">
+                        {isSearchMode ? 'No products found matching your search.' : 'No products found.'}
+                    </p>
+                    {isSearchMode && (
+                        <button
+                            onClick={clearSearch}
+                            className="mt-4 px-4 py-2 bg-[var(--color-primary)] text-white rounded-md hover:bg-[var(--btn-hover-color)] transition-colors"
+                        >
+                            View All Products
+                        </button>
+                    )}
                 </div>
             ) : (
                 <>
                     {loadingPage && (
                         <div className="flex justify-center items-center py-4">
                             <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[var(--color-primary)]"></div>
-                            <span className="ml-2 text-sm text-gray-500">Loading products...</span>
                         </div>
                     )}
-
+                    
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                         {products.map((product) => (
                             <div
                                 key={product.id}
-                                className="bg-[var(--card-bg)] border border-[var(--color-border)] rounded-lg p-2 flex flex-col justify-between"
+                                className="bg-[var(--card-bg)] border border-[var(--color-border)] rounded-lg p-2 flex flex-col justify-between hover:shadow-lg transition-shadow"
                             >
                                 <img
                                     src={product.imageUrl || "/placeholder.jpg"}
                                     alt={product.name}
+                                    loading="lazy"
                                     className="w-full h-48 object-contain aspect-square rounded mb-4"
                                 />
 
-                                <div className="flex justify-between items-center align-middle mb-2">
+                                <div className="flex justify-between items-center mb-2">
                                     <Link to={`/products/${product.id}`}>
-                                        <h2 className="text-lg font-semibold mb-1">{product.name}</h2>
+                                        <h2 className="text-lg font-semibold hover:text-[var(--color-primary)] transition-colors">
+                                            {product.name}
+                                        </h2>
                                     </Link>
 
                                     <button
                                         onClick={() => handleToggleFavorite(product.id)}
-                                        className="text-[var(--color-primary)] hover:scale-110 transition-transform cursor-pointer"
+                                        className="text-[var(--color-primary)] hover:scale-110 transition-transform"
                                         aria-label="Toggle favorite"
                                     >
                                         <Heart fill={favoriteSet.has(product.id) ? "var(--color-primary)" : "none"} />
@@ -292,9 +366,9 @@ export default function Products() {
                                 ) : (
                                     <p className="text-sm text-gray-500 mb-1">No reviews yet</p>
                                 )}
-                                
+
                                 <p className="text-sm text-gray-500 mb-1">Actual Product May Differ</p>
-                                
+
                                 <button
                                     onClick={() => {
                                         addToCart(product);
@@ -309,9 +383,10 @@ export default function Products() {
                         ))}
                     </div>
 
-                    {totalPages > 1 && <PaginationControls />}
+                    <PaginationControls />
                 </>
             )}
+            
         </div>
     );
 }
