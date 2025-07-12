@@ -23,19 +23,19 @@
 
   .dark body {
     background-color: var(--color-bg);
-    --color-primary: #ee8181;
-    --color-bg: #1F2937;
-    --color-text-primary: #FFFFFF;
-    --color-text-primary-hover: #777777;
-    --color-border: #444444;
-    --btn-bg-color: #FF6347;
-    --btn-hover-color: #fd8773;
-    --btn-text-color: #121212;
-    --card-bg: #35404e;
+    --color-primary: #3B82F6; /* Original: #ee8181 */
+    --color-bg: #0F172A; /* Original: #1F2937 */
+    --color-text-primary: #F1F5F9; /* Original: #FFFFFF */
+    --color-text-primary-hover: #94A3B8; /* Original: #777777 */
+    --color-border: #334155; /* Original: #979696 */
+    --btn-bg-color: #3B82F6; /* Original: #FF6347 */
+    --btn-hover-color: #2563EB; /* Original: #fd8773 */
+    --btn-text-color: #FFFFFF; /* Original: #121212 */
+    --card-bg: #1E293B; /* Original: #35404e */
   }
 
   .dark .btn-primary:hover {
-    --btn-hover-color: #fd8773;
+    --btn-hover-color: #2563EB; /* Original: #fd8773 */
     background-color: var(--btn-hover-color);
   }
   
