@@ -9,7 +9,7 @@ export default function Home() {
   return (
     <div className="text-[var(--color-text-primary)] bg-[var(--color-bg)]">
       
-      <section className="relative bg-gradient-to-br from-red-700 to-red-900 py-24 px-6 text-center overflow-hidden">
+      <section className="relative bg-[var(--color-primary)] py-24 px-6 text-center overflow-hidden">
 
         <div className="absolute inset-0 bg-black/20"></div>
 
@@ -41,7 +41,7 @@ export default function Home() {
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link
               to="/products"
-              className="px-8 py-4 text-lg rounded-full bg-white text-red-700 font-semibold shadow-lg hover:bg-gray-50 hover:scale-105 transition-all duration-300 cursor-pointer"
+              className="px-8 py-4 text-lg rounded-full bg-white text-[var(--color-primary)] font-semibold shadow-lg hover:bg-gray-50 hover:scale-105 transition-all duration-300 cursor-pointer"
             >
               Browse Our Selection
             </Link>
@@ -49,7 +49,7 @@ export default function Home() {
               href="https://maps.google.com/?q=103+Illinois+53,+Braceville,+IL"
               target="_blank"
               rel="noopener noreferrer"
-              className="px-8 py-4 text-lg rounded-full border-2 border-white text-white hover:bg-white hover:text-red-700 transition-all duration-300 text-center cursor-pointer"
+              className="px-8 py-4 text-lg rounded-full border-2 border-white text-white hover:bg-white hover:text-[var(--color-primary)] font-semibold transition-all duration-300 text-center cursor-pointer"
             >
               Get Directions
             </a>

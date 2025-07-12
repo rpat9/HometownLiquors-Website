@@ -213,8 +213,8 @@ export default function Products() {
                                 onClick={() => handlePageChange(pageNum)}
                                 className={`px-3 py-2 rounded-md text-sm font-medium ${
                                     pageNum === currentPage
-                                        ? 'bg-[var(--color-primary)] text-white'
-                                        : 'bg-gray-300 text-gray-700 hover:bg-gray-300'
+                                        ? 'bg-[var(--color-primary)] text-white cursor-pointer'
+                                        : 'bg-gray-300 text-gray-700 hover:bg-gray-300 cursor-pointer'
                                 }`}
                             >
                                 {pageNum}
